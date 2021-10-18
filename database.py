@@ -16,7 +16,7 @@ lock = threading.Lock()
 limiter = Limiter(
     app,
     key_func=get_remote_address,
-    default_limits=["300 per day", "30 per minute"]
+    default_limits=["300 per minute"]
 )
 
  
