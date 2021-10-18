@@ -7,3 +7,5 @@ MarkupSafe==2.0.1
 numpy==1.21.2
 opencv-python-headless
 Werkzeug==2.0.2
+Flask-Cors==3.0.10
+Flask-Limiter==1.4
