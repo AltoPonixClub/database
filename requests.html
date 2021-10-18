@@ -1,0 +1,41 @@
+<html>
+<body>
+	request test
+	<br>
+	<button onclick="set()">set (atmospheric_temp)</button>
+	<input type="text" id="set"/>
+	<br>
+	<button onclick="get()">get (key)</button>
+	<input type="text" id="get"/>
+	<div id="status" style="width:98vw;line-break:anywhere"></div>
+	<div id="output" style="width:98vw;line-break:anywhere"></div>
+</body>
+<script type="text/javascript">
+	const url = "http://altoponix-database.herokuapp.com"
+//	const url = "http://127.0.0.1"
+	function set() {
+		let r = new XMLHttpRequest();
+		let json = {
+			"atmospheric_temp": parseInt(document.getElementById('set').value)
+		};
+		r.onload = function(e) {
+			document.getElementById('output').innerHTML = r.responseText
+			document.getElementById('status').innerHTML = "status " + r.status
+		}
+		r.open("POST", url + "/set/");
+		r.setRequestHeader('Content-Type', 'application/json');
+		r.send(JSON.stringify(json));
+	}
+	
+	function get() {
+		let v = document.getElementById('get').value
+		let r = new XMLHttpRequest();
+		r.onload = function(e) {
+			document.getElementById('output').innerHTML = r.responseText
+			document.getElementById('status').innerHTML = "status " + r.status
+		}
+		r.open("GET", url + "/get/" + v);
+		r.send();
+	}
+</script>
+</html>
