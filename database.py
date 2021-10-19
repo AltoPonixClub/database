@@ -19,34 +19,29 @@ limiter = Limiter(
     default_limits=["300 per minute"]
 )
 
- 
 @app.route('/', methods=['GET'])
-def home():
-	return ""
-
 @app.route('/get/', methods=['GET'])
 def get():
-	with lock:
-		return jsonify(data)
+    with lock:
+        return jsonify(data)
 
 @app.route('/get/<key>', methods=['GET'])
-def getkey(key):
-	with lock:
-		if key in data:
-			return str(data[key])
-		else:
-			abort(404)
+def get_key(key):
+    with lock:
+        if key in data:
+            return str(data[key])
+        else:
+            abort(404)
 
 @app.route('/set/', methods=['POST'])
 def set():
-	with lock:
-		content = request.get_json()
-		for key, value in content.items():
-			if key in data:
-				print("set " + key + " to " + str(value))
-				data[key] = value
-		return redirect(url_for('home'))
+    with lock:
+        content = request.get_json()
+        for key, value in content.items():
+                if key in data:
+                    print("set " + key + " to " + str(value))
+                    data[key] = value
+        return redirect(url_for('home'))
 
 if __name__ == "__main__":
     app.run()
-	
