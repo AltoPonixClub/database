@@ -11,7 +11,7 @@ Endpoint: `/set/`
 Use a json object with the fields that need to be updated.
 ex (javascript):
 ```
-let json = {"atmospheric_temp":8};
+let json = {"key":672ef79b4d0a4805bc529d1ae44bc26b,"atmospheric_temp":8};
 let xhr = new XMLHttpRequest();
 xhr.onload = function(e) {
 	console.log(xhr.responseText)
@@ -20,5 +20,8 @@ xhr.onload = function(e) {
 r.open("POST", url);
 r.setRequestHeader('Content-Type', 'application/json');
 r.send(JSON.stringify(json));
-Not yet implemented
+
+Must require a key. Any fields that aren't specified are not updated
+Returns 400 if the data is invalid
+See requests.html
 ```

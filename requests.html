@@ -1,49 +1,134 @@
 <html>
-<body>
-	request test
-	<br>
-	<button onclick="set()">set (atmospheric_temp)</button>
-	<input type="text" id="set"/>
-	<br>
-	<button onclick="get()">get</button>
-	<input type="text" id="get" placeholder="key"/>
-	<div id="status" style="width:99vw;line-break:anywhere;font-family:monospace"></div>
-	<pre id="output" style="width:99vw;line-break:anywhere;font-family:monospace;white-space: pre-wrap;"></pre>
-</body>
-<script type="text/javascript">
-	const url = "http://altoponix-database.herokuapp.com"
-	// const url = "http://127.0.0.1:5000"
-	function set() {
-		document.getElementById('output').innerHTML = ""
-		document.getElementById('status').innerHTML = "waiting..."
-		let r = new XMLHttpRequest();
-		let json = {
-			"atmospheric_temp": parseInt(document.getElementById('set').value)
-		};
-		r.onload = function(e) {
-			document.getElementById('output').innerHTML = r.responseText
-			document.getElementById('status').innerHTML = "status " + r.status
-		}
-		r.open("POST", url + "/set/");
-		r.setRequestHeader('Content-Type', 'application/json');
-		r.send(JSON.stringify(json));
-	}
-	
-	function get() {
-		document.getElementById('output').innerHTML = ""
-		document.getElementById('status').innerHTML = "waiting..."
-		let v = document.getElementById('get').value
-		let r = new XMLHttpRequest();
-		r.onload = function(e) {
-			document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
-			document.getElementById('status').innerHTML = "status " + r.status
-		}
-        if (v == "") {
-            r.open("GET", url + "/get/");
-        }else{
-            r.open("GET", url + "/get?key=" + v);
+    <head>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0px;
+                padding: 0;
+                font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+                overflow: hidden;
+            }
+            input {
+                width:200px;
+                height:25px;
+                font-size: 15px;
+                margin: 10px;
+                margin-bottom: 0px;
+                padding-left: 10px;
+                border-radius: 15px;
+                border: 1px #ddd solid;
+            }
+            button {
+                border-radius: 15px;
+                margin: 10px;
+                border: 1px #ddd solid;
+                background: rgb(58, 106, 238);
+                color:white;
+                width:100px;
+                height:25px;
+                font-size:15px;
+                transition: ease-out;
+                transition-duration: 0.3s;
+            }
+            button:hover{
+                background: rgb(109, 148, 255);
+            }
+            .input {
+                width:300px;
+                border-right: 1px #ddd solid;
+                height:100vh;
+                padding: 20px;
+                overflow:auto;
+                flex: 0 0 auto;
+            }
+            .response {
+                overflow:auto;
+                background-color: #eee;
+                padding:10px;
+                flex: 1 0 auto;
+            }
+            .container {
+                display:flex;
+                flex-direction: row;
+                height:100vh;
+            }
+            select{
+                width:200px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="input">
+                <h1>request test</h1>
+                <br>
+                <b>POST Request</b>
+                <br>
+                <input type="text" id="key" placeholder="key (required)"/><br>
+                <input type="text" id="foliage_feed" placeholder="foliage_feed"/><br>
+                <input type="text" id="atmospheric_temp" placeholder="atmospheric_temp"/><br>
+                <input type="text" id="reservoir_temp" placeholder="reservoir_temp"/><br>
+                <button onclick="set()">Post</button>
+                <br><br>
+                <b>GET Request</b>
+                <br>
+                <input type="text" id="get" placeholder="key"/><br>
+                <button onclick="get()">Get</button>
+                <br>
+                <b>SETTINGS</b>
+                <br><br>
+                Url:
+                <select name="url" id="url">
+                    <option value="heroku">http://altoponix-database.herokuapp.com</option>
+                    <option value="localhost">http://127.0.0.1:5000</option>
+                </select>
+            </div>
+            <div class="response">
+                <div id="status" style="width:99vw;line-break:anywhere;font-family:monospace">waiting on query...</div>
+                <pre id="output" style="width:99vw;line-break:anywhere;font-family:monospace;white-space: pre-wrap;"></pre>
+            </div>
+        </div>
+    </body>
+    <script type="text/javascript"> 
+        function set() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "key": document.getElementById('key').value,
+                "foliage_feed": document.getElementById('foliage_feed').value,
+                "atmospheric_temp": parseFloat(document.getElementById('atmospheric_temp').value),
+                "reservoir_temp": parseFloat(document.getElementById('reservoir_temp').value),
+            };
+            if (document.getElementById('foliage_feed').value == "") {
+                json["foliage_feed"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = r.responseText
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/set/");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
         }
-		r.send();
-	}
-</script>
+        
+        function get() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let v = document.getElementById('get').value
+            let r = new XMLHttpRequest();
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            if (v == "") {
+                r.open("GET", url + "/get/");
+            }else{
+                r.open("GET", url + "/get?key=" + v);
+            }
+            r.send();
+        }
+    </script>
 </html>

@@ -35,11 +35,14 @@ def get():
 @app.route('/set/', methods=['POST'])
 def update():
     with sqlite3.connect(database_path) as conn:
-        content = request.get_json()
-        # for key, value in content.items():
-        #     if key in data:
-        #         print("set " + key + " to " + str(value))
-        #         data[key] = value
+        content = utils.isolate_updatable(request.get_json())
+        if "key" not in content:
+            return {"success":False,"cause": "Missing one or more fields: [key]"},400
+        if len(content) < 2:
+            return {"success":False,"cause": "Couldn't update any fields"},400
+        d = utils.update(conn,content)
+        if d is not None:
+            return d
         return redirect(url_for('home'))
 
 @app.route('/', methods=['GET'])
