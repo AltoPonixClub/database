@@ -1,7 +1,7 @@
 # Key Value Store For Sensor Data from S2
 
 **GET**
-Endpoint: `/get/<key>`
+Endpoint: `/get` or `/get?key=<key>`
 Returns the value associated with the key given.
 If there is no key given, returns the whole json object
 If the key doesn't exist, returns 404
@@ -20,6 +20,5 @@ xhr.onload = function(e) {
 r.open("POST", url);
 r.setRequestHeader('Content-Type', 'application/json');
 r.send(JSON.stringify(json));
+Not yet implemented
 ```
-# Deployment
-``git push heroku main``

@@ -1,26 +1,57 @@
 import pandas as pd
-import random
-# def set(conn, variable, value):
+
+table_typings = None
 
 def init(conn):
-    try:
-        with open("./sql_scripts/init.sql") as f:
-            conn.executescript(f.read())
-    except Exception as e:
-        print(e)
+    conn.executescript('''
+        CREATE TABLE if not exists monitors (
+            key char(32) PRIMARY KEY,
+            foliage_feed text,
+            atmospheric_temp float,
+            reservoir_temp float
+        );
+    ''')
+    cur = conn.cursor()
+    cur.execute("PRAGMA table_info(monitors)")
+    global table_typings
+    table_typings = [x[1] for x in cur.fetchall()]
 
-def insert(conn):
-    conn.execute("INSERT INTO database VALUES (?, ?, ?, ?)", (1, "Bye", 1, 2))
+def insert(conn, val):
+    cur = conn.cursor()
+    cur.execute("INSERT INTO monitors VALUES (?, ?, ?, ?)", val)
     conn.commit()
-    # conn.execute("INSERT INTO database()", values)
-    # conn.commit()
-def set(conn):
-    with open("./sql_scripts/set.sql") as f:
-        template = f.read()
-        # TODO: parameters
-        command = template.replace("<id>", "1").replace("<reservoir_temp>", str(1)).replace("<foliage_feed>", "\'woahfeed\'").replace("<atmospheric_temp>", str(random.randint(0, 10)))
-        conn.execute(command)
+
+def update(conn, val):
+    cur = conn.cursor()
+    # put id last
+    task = (val[1],val[2],val[3],val[0])
+    sql = '''   UPDATE monitors 
+                SET foliage_feed = ?,
+		            atmospheric_temp = ?,
+		            reservoir_temp = ?
+                WHERE key = ?'''
+    cur.execute(sql, task)
+    conn.commit()
 
 def to_string(conn):
-    return (pd.read_sql_query("SELECT * FROM database", conn))
+    return (pd.read_sql_query("SELECT * FROM monitors", conn))
 
+def sqltojson(s):
+    json = {}
+    for a in s:
+        a = list(a)
+        k = a.pop(0)
+        t = ({table_typings[i+1]: a[i] for i in range(len(table_typings)-1)})
+        if len(s)==1:
+            return t
+        else:
+            json[k]=t
+    return json
+
+def get(conn, key=None):
+    cur = conn.cursor()
+    if key is not None:
+        cur.execute("SELECT * FROM monitors WHERE key = ?",(key,))
+    else:
+        cur.execute("SELECT * FROM monitors")
+    return sqltojson(cur.fetchall())

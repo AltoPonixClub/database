@@ -5,15 +5,17 @@
 	<button onclick="set()">set (atmospheric_temp)</button>
 	<input type="text" id="set"/>
 	<br>
-	<button onclick="get()">get (key)</button>
-	<input type="text" id="get"/>
-	<div id="status" style="width:98vw;line-break:anywhere"></div>
-	<div id="output" style="width:98vw;line-break:anywhere"></div>
+	<button onclick="get()">get</button>
+	<input type="text" id="get" placeholder="key"/>
+	<div id="status" style="width:99vw;line-break:anywhere;font-family:monospace"></div>
+	<pre id="output" style="width:99vw;line-break:anywhere;font-family:monospace;white-space: pre-wrap;"></pre>
 </body>
 <script type="text/javascript">
-	const url = "http://altoponix-database.herokuapp.com"
-	// const url = "http://127.0.0.1:5000"
+	// const url = "http://altoponix-database.herokuapp.com"
+	const url = "http://127.0.0.1:5000"
 	function set() {
+		document.getElementById('output').innerHTML = ""
+		document.getElementById('status').innerHTML = "waiting..."
 		let r = new XMLHttpRequest();
 		let json = {
 			"atmospheric_temp": parseInt(document.getElementById('set').value)
@@ -28,13 +30,19 @@
 	}
 	
 	function get() {
+		document.getElementById('output').innerHTML = ""
+		document.getElementById('status').innerHTML = "waiting..."
 		let v = document.getElementById('get').value
 		let r = new XMLHttpRequest();
 		r.onload = function(e) {
-			document.getElementById('output').innerHTML = r.responseText
+			document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
 			document.getElementById('status').innerHTML = "status " + r.status
 		}
-		r.open("GET", url + "/get/" + v);
+        if (v == "") {
+            r.open("GET", url + "/get/");
+        }else{
+            r.open("GET", url + "/get?key=" + v);
+        }
 		r.send();
 	}
 </script>
