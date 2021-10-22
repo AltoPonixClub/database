@@ -25,15 +25,11 @@ def connect(db_file):
     return conn
 
 def init(conn):
-    try:
-        c = conn.cursor()
-        with open("./sql_scripts/init.sql") as f:
-            c.executescript(f.read())
-    except Error as e:
-        print(e)
+    utils.init(conn)
 
 def run(conn):
-    utils.insert(conn)
+    # utils.insert(conn)
+    utils.set(conn)
     print(utils.to_string(conn))
 
 
