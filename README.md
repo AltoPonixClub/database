@@ -9,6 +9,14 @@ If the key doesn't exist, returns 404
 **POST**
 Endpoint: `/set/`
 Use a json object with the fields that need to be updated.
+ex (python):
+```
+url = "https://altoponix-database.herokuapp.com/set"
+data = {"key":"672ef79b4d0a4805bc529d1ae44bc26b","atmospheric_temp":8}
+headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+import json, requests
+r = requests.post(url, data=json.dumps(data), headers=headers)
+```
 ex (javascript):
 ```
 let json = {"key":672ef79b4d0a4805bc529d1ae44bc26b,"atmospheric_temp":8};
