@@ -9,14 +9,17 @@ url = "https://altoponix-database.herokuapp.com/set"
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 counter = 0
 while True:
+    raw_image = cap.read()[1]
+    size = (raw_image.shape[0]//19, raw_image.shape[1]//19)
+    print(size)
     data = {
         "key": "672ef79b4d0a4805bc529d1ae44bc26b",
         "foliage_feed": base64.b64encode(
             cv2.imencode(
                 ".JPG",
                 cv2.resize(
-                    cap.read()[1],
-                    (10,10)))[1]).decode("utf-8"),
+                    raw_image,
+                    size))[1]).decode("utf-8"),
         "atmospheric_temp": 8}
     requests.post(url, data=json.dumps(data), headers=headers)
     time.sleep(0.1)
