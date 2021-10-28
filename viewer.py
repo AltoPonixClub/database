@@ -16,7 +16,7 @@ def fetch_img():
         feed_buffer.append(img)
         if len(feed_buffer) > buffer_size:
             del feed_buffer[0]
-        time.sleep(0.1)
+        time.sleep(0.01)
 
 def view():
     while True:

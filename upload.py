@@ -16,6 +16,7 @@ buffer_size = 3
 def feed_encode():
     try:
         cap = cv2.VideoCapture(-1)
+        assert (cap.read()[1] is not None)
     except Exception as e:
         cap = cv2.VideoCapture(os.environ['VIDEO'])
     start_time = time.time()
@@ -33,6 +34,7 @@ def feed_encode():
                         raw_image,
                         size), [int(cv2.IMWRITE_JPEG_QUALITY), compression_quality:=60])[1]).decode("utf-8"),
             "atmospheric_temp": np.random.randint(0, 5)}
+        data["foliage_feed"] = "None"
         feed_buffer.append(json.dumps(data))
         if len(feed_buffer) > buffer_size:
             del feed_buffer[0]
