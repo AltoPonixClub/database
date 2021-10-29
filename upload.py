@@ -6,44 +6,67 @@ import time
 import numpy as np
 import threading
 import os
+import constants
 
 url = "https://altoponix-database.herokuapp.com/api/v1/monitors/update"
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-counter = 0
 feed_buffer = []
 buffer_size = 3
+prefix_path = 'vids/frag/'
 
-
-def feed_encode():
+def frag_maker():
     try:
         cap = cv2.VideoCapture(-1)
         assert (cap.read()[1] is not None)
     except Exception as e:
         cap = cv2.VideoCapture(os.environ['VIDEO'])
-    start_time = time.time()
+    # fourcc = cv2.VideoWriter_fourcc(*'H264')
+    fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+    tot = cv2.VideoWriter('vids/tot.mp4', fourcc, cap.get(cv2.CAP_PROP_FPS), constants.img_size)
+    tot_frames_per_vid = 1
+    frag_length = 6
+    counter = 0
     while True:
+        start_time = counter / cap.get(cv2.CAP_PROP_FPS)
+        frag = cv2.VideoWriter(os.path.join(prefix_path, 'frag.mp4'), fourcc, cap.get(cv2.CAP_PROP_FPS), constants.img_size)
+        while (counter / cap.get(cv2.CAP_PROP_FPS) - start_time) < frag_length:
+            print(counter / cap.get(cv2.CAP_PROP_FPS))
+            ret, frame = cap.read()
+            frame = cv2.resize(frame, constants.img_size)
+            frag.write(frame)
+            if counter % tot_frames_per_vid == 0:
+                tot.write(frame)
+            cv2.imshow('frame', frame)
+            counter += 1
+            time.sleep(1 / cap.get(cv2.CAP_PROP_FPS))
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        frag.release()
+        for path in [path for path in os.listdir(prefix_path) if constants.finished_identifier in path and '.mp4' in path]:
+            os.remove(os.path.join(prefix_path, path))
+        os.rename(os.path.join(prefix_path, 'frag.mp4'), os.path.join(prefix_path, 'frag_done_%s.mp4' % round(time.time())))
 
-        raw_image = cap.read()[1]
-        size = (raw_image.shape[0] // 8, raw_image.shape[1] // 8)
-        print(size)
-        data = {
-            "id": "672ef79b4d0a4805bc529d1ae44bc26b",
-            "foliage_feed": base64.b64encode(
-                cv2.imencode(
-                    ".JPEG",
-                    cv2.resize(
-                        raw_image,
-                        size), [int(cv2.IMWRITE_JPEG_QUALITY), compression_quality := 60])[1]).decode("utf-8"),
-            "atmospheric_temp": np.random.randint(0, 5)}
-        # data["foliage_feed"] = "None"
-        feed_buffer.append(json.dumps(data))
-        if len(feed_buffer) > buffer_size:
-            del feed_buffer[0]
+
+def json_updater():
+    last_uploaded_mp4 = None
+    while True:
+        # TODO: finish this
+        for path in [path for path in os.listdir(prefix_path) if constants.finished_identifier in path and '.mp4' in path]:
+            if last_uploaded_mp4 != path:
+                last_uploaded_mp4 = path
+                with open(os.path.join(prefix_path, path), 'rb') as f:
+                    data = {
+                        "id": "672ef79b4d0a4805bc529d1ae44bc26b",
+                        "foliage_feed": str(f.read())}
+                    # data["foliage_feed"] = "None"
+                    feed_buffer.append(json.dumps(data))
+                    if len(feed_buffer) > buffer_size:
+                        del feed_buffer[0]
         # time.sleep(1 / cap.get(cv2.CAP_PROP_FPS))
         # print(len(data["foliage_feed"]))
 
 
-def upload(fps=1):
+def uploader(fps=1):
     counter = 0
     while len(feed_buffer) == 0:
         continue
@@ -53,8 +76,8 @@ def upload(fps=1):
         print(counter := counter + 1)
 
 
-threading.Thread(target=feed_encode).start()
+threading.Thread(target=frag_maker).start()
 time.sleep(1)
-threading.Thread(target=upload, args=(10,)).start()
-
-# print(counter := counter + 1)
+threading.Thread(target=json_updater).start()
+time.sleep(1)
+threading.Thread(target=uploader, args=(10,)).start()
