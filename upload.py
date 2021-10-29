@@ -7,7 +7,7 @@ import numpy as np
 import threading
 import os
 
-url = "https://altoponix-database.herokuapp.com/set"
+url = "https://altoponix-database.herokuapp.com/api/v1/monitors/update"
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 counter = 0
 feed_buffer = []
@@ -26,7 +26,7 @@ def feed_encode():
         size = (raw_image.shape[0]//8, raw_image.shape[1]//8)
         print(size)
         data = {
-            "key": "672ef79b4d0a4805bc529d1ae44bc26b",
+            "id": "672ef79b4d0a4805bc529d1ae44bc26b",
             "foliage_feed": base64.b64encode(
                 cv2.imencode(
                     ".JPEG",
@@ -34,7 +34,7 @@ def feed_encode():
                         raw_image,
                         size), [int(cv2.IMWRITE_JPEG_QUALITY), compression_quality:=60])[1]).decode("utf-8"),
             "atmospheric_temp": np.random.randint(0, 5)}
-        data["foliage_feed"] = "None"
+        # data["foliage_feed"] = "None"
         feed_buffer.append(json.dumps(data))
         if len(feed_buffer) > buffer_size:
             del feed_buffer[0]
