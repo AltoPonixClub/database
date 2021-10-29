@@ -10,8 +10,10 @@ table_typings = None
 # ? params automatically escape inputs
 # https://stackoverflow.com/questions/29528511/python-sqlite3-sql-injection-vulnerable-code
 
+
 def current_milli_time():
     return round(time.time() * 1000)
+
 
 def init(conn):
     conn.executescript('''
@@ -50,23 +52,26 @@ def insert(conn, val):
 
 
 def isolate_updatable(content):
-    return {i[0]: i[1] for i in content.items() if i[0] in table_typings and i[1] is not None}
+    return {i[0]: i[1] for i in content.items(
+    ) if i[0] in table_typings and i[1] is not None}
+
 
 def update_monitor(conn, val):
     s = current_milli_time()
-    j = get_monitors(conn,val["id"])
+    j = get_monitors(conn, val["id"])
     l = []
     for i in j.items():
         if i[0] in val and i[0] != "id":
-            if type(i[1]) is dict and type(val[i[0]]) is int or type(val[i[0]]) is float:
+            if isinstance(i[1], dict) and isinstance(
+                    val[i[0]], int) or isinstance(val[i[0]], float):
                 try:
                     i[1]["value"] = float(val[i[0]])
                     i[1]["history"][str(s)] = float(val[i[0]])
-                    l.append((i[0],json.dumps(i[1])))
-                except:
+                    l.append((i[0], json.dumps(i[1])))
+                except BaseException:
                     pass
-            if type(i[1]) is str:
-                l.append((i[0],val[i[0]]))
+            if isinstance(i[1], str):
+                l.append((i[0], val[i[0]]))
     if len(l) == 0:
         return {"success": False, "cause": "Invalid data"}, 400
     cur = conn.cursor()
@@ -81,7 +86,7 @@ def update_monitor(conn, val):
     try:
         cur.execute(sql, tuple(data))
         conn.commit()
-    except:
+    except BaseException:
         return {"success": False, "cause": "Invalid data"}, 400
 
 
@@ -94,7 +99,8 @@ def sqltojson(s):
     for a in s:
         a = list(a)
         k = a.pop(0)
-        t = ({table_typings[i + 1]: optionaljson(a[i]) for i in range(len(table_typings) - 1)})
+        t = ({table_typings[i + 1]: optionaljson(a[i])
+             for i in range(len(table_typings) - 1)})
         if len(s) == 1:
             return t
         else:
@@ -111,10 +117,14 @@ def get_monitors(conn, key=None):
     v = cur.fetchall()
     return sqltojson(v)
 
+
 def get_owners(conn, key=None):
     cur = conn.cursor()
     if key is not None:
-        cur.execute("SELECT monitors.id FROM owners JOIN monitors ON monitors.id = owners.monitor_id WHERE user_id = ?", (key,))
+        cur.execute(
+            "SELECT monitors.id FROM owners JOIN monitors ON monitors.id = owners.monitor_id WHERE user_id = ?",
+            (key,
+             ))
         v = cur.fetchall()
         return [x[0] for x in v]
     else:
@@ -126,7 +136,7 @@ def get_owners(conn, key=None):
                 s[a[1]] = []
             s[a[1]].append(a[0])
         return s
-    
+
 
 def add_monitor(conn, val):
     cur = conn.cursor()
@@ -153,12 +163,13 @@ def add_monitor(conn, val):
             return {"success": False, "cause": "monitor_id already exists"}, 400
         return {"success": False, "cause": "Unknown Error"}, 400
 
+
 def reset_monitor(conn, id):
     if len(get_monitors(conn, id)) == 0:
         return {"success": False, "cause": "Invalid id"}, 400
     cur = conn.cursor()
     try:
-        cur.execute("""UPDATE monitors SET 
+        cur.execute("""UPDATE monitors SET
             atmospheric_temp = '{"value":null,"history":{}}',
             reservoir_temp = '{"value":null,"history":{}}',
             light_intensity = '{"value":null,"history":{}}',
@@ -179,6 +190,7 @@ def reset_monitor(conn, id):
             return {"success": False, "cause": "monitor_id already exists"}, 400
         return {"success": False, "cause": "Unknown Error"}, 400
 
+
 def delete_monitor(conn, id):
     if len(get_monitors(conn, id)) == 0:
         return {"success": False, "cause": "Invalid id"}, 400
@@ -190,10 +202,10 @@ def delete_monitor(conn, id):
     except Exception as e:
         print(e)
         return {"success": False, "cause": "Unknown Error"}, 400
-    
+
 
 def optionaljson(v):
     try:
         return json.loads(v)
-    except:
+    except BaseException:
         return v

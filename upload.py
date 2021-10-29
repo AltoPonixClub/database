@@ -13,6 +13,7 @@ counter = 0
 feed_buffer = []
 buffer_size = 3
 
+
 def feed_encode():
     try:
         cap = cv2.VideoCapture(-1)
@@ -23,7 +24,7 @@ def feed_encode():
     while True:
 
         raw_image = cap.read()[1]
-        size = (raw_image.shape[0]//8, raw_image.shape[1]//8)
+        size = (raw_image.shape[0] // 8, raw_image.shape[1] // 8)
         print(size)
         data = {
             "id": "672ef79b4d0a4805bc529d1ae44bc26b",
@@ -32,14 +33,15 @@ def feed_encode():
                     ".JPEG",
                     cv2.resize(
                         raw_image,
-                        size), [int(cv2.IMWRITE_JPEG_QUALITY), compression_quality:=60])[1]).decode("utf-8"),
+                        size), [int(cv2.IMWRITE_JPEG_QUALITY), compression_quality := 60])[1]).decode("utf-8"),
             "atmospheric_temp": np.random.randint(0, 5)}
         # data["foliage_feed"] = "None"
         feed_buffer.append(json.dumps(data))
         if len(feed_buffer) > buffer_size:
             del feed_buffer[0]
-        time.sleep(1/cap.get(cv2.CAP_PROP_FPS))
+        # time.sleep(1 / cap.get(cv2.CAP_PROP_FPS))
         # print(len(data["foliage_feed"]))
+
 
 def upload(fps=1):
     counter = 0
@@ -47,8 +49,9 @@ def upload(fps=1):
         continue
     while True:
         requests.post(url, data=feed_buffer[-1], headers=headers)
-        time.sleep(1/fps)
-        print(counter:=counter+1)
+        time.sleep(1 / fps)
+        print(counter := counter + 1)
+
 
 threading.Thread(target=feed_encode).start()
 time.sleep(1)
