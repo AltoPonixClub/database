@@ -87,11 +87,11 @@ def delete_monitor():
             return d
         return redirect(url_for('home'))
 
-@app.route('/api/v1/users/monitors/get', methods=['GET'])
-def get_user():
+@app.route('/api/v1/owners/get', methods=['GET'])
+def get_owners():
     with sqlite3.connect(database_path) as conn:
         user_id = request.args.get('user_id')
-        j = utils.get_users(conn, user_id)
+        j = utils.get_owners(conn, user_id)
         if j == {}:
             return {"success": False, "cause": "Invalid user_id"}, 400
         return {"success": True, "data": j}

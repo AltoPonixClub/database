@@ -183,10 +183,10 @@
                 <hr>
                 <div class="section get">
                     <div class="section_top">
-                        <div class="section_title">Get Monitors Owned By User</div>
+                        <div class="section_title">Get Owners of Monitors</div>
                         <div class="section_button"></div>
                     </div>
-                    <div class="endpoint">/users/monitors/get</div>
+                    <div class="endpoint">/owners/get</div>
                     <input type="text" id="user_id2" placeholder="user_id"/><br>
                     <button onclick="get_users()">Get</button>
                 </div>
@@ -328,9 +328,9 @@
                 document.getElementById('status').innerHTML = "status " + r.status
             }
             if (v == "") {
-                r.open("GET", url + "/users/monitors/get");
+                r.open("GET", url + "/owners/get");
             }else{
-                r.open("GET", url + "/users/monitors/get?user_id=" + v);
+                r.open("GET", url + "/owners/get?user_id=" + v);
             }
             r.send();
         }

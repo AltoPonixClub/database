@@ -31,7 +31,7 @@ def init(conn):
         );
     ''')
     conn.executescript('''
-        CREATE TABLE if not exists users (
+        CREATE TABLE if not exists owners (
             monitor_id char(32) PRIMARY KEY NOT NULL,
             user_id char(32) NOT NULL,
             CHECK(length(user_id) == 32 and TYPEOF(user_id) == 'text' and length(monitor_id) == 32 and TYPEOF(monitor_id) == 'text')
@@ -111,14 +111,14 @@ def get_monitors(conn, key=None):
     v = cur.fetchall()
     return sqltojson(v)
 
-def get_users(conn, key=None):
+def get_owners(conn, key=None):
     cur = conn.cursor()
     if key is not None:
-        cur.execute("SELECT monitors.id FROM users JOIN monitors ON monitors.id = users.monitor_id WHERE user_id = ?", (key,))
+        cur.execute("SELECT monitors.id FROM owners JOIN monitors ON monitors.id = owners.monitor_id WHERE user_id = ?", (key,))
         v = cur.fetchall()
         return [x[0] for x in v]
     else:
-        cur.execute("SELECT * FROM users")
+        cur.execute("SELECT * FROM owners")
         v = cur.fetchall()
         s = {}
         for a in v:
@@ -131,7 +131,7 @@ def get_users(conn, key=None):
 def add_monitor(conn, val):
     cur = conn.cursor()
     try:
-        cur.execute("INSERT INTO users VALUES (?, ?)", val)
+        cur.execute("INSERT INTO owners VALUES (?, ?)", val)
         cur.execute("""INSERT INTO monitors VALUES (?,
             '{"value":null,"history":{}}',
             '{"value":null,"history":{}}',
@@ -184,7 +184,7 @@ def delete_monitor(conn, id):
         return {"success": False, "cause": "Invalid id"}, 400
     cur = conn.cursor()
     try:
-        cur.execute("DELETE FROM users WHERE monitor_id = ?", (id,))
+        cur.execute("DELETE FROM owners WHERE monitor_id = ?", (id,))
         cur.execute("DELETE FROM monitors WHERE id = ?", (id,))
         conn.commit()
     except Exception as e:
