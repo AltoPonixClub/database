@@ -13,7 +13,7 @@
                 height:25px;
                 font-size: 15px;
                 margin: 10px;
-                margin-bottom: 0px;
+                margin-top: 0px;
                 padding-left: 10px;
                 border-radius: 15px;
                 border: 1px #ddd solid;
@@ -29,10 +29,12 @@
                 font-size:15px;
                 transition: ease-out;
                 transition-duration: 0.3s;
+                margin-top: 0px;
             }
             button:hover{
                 background: rgb(109, 148, 255);
-            } .input { 
+            } 
+            .input { 
                 width:300px; 
                 border-right: 1px #ddd solid;
                 height:100vh;
@@ -52,82 +54,301 @@
                 height:100vh;
             }
             select{
-                width:200px;
+                width:250px;
+                height:25px;
+                font-size: 15px;
+                padding-left: 10px;
+            }
+            .section{
+                padding: 10px;
+                border: 1px #ddd solid;
+                border-radius: 10px;
+                transition-duration: 0.5s;
+                transition-timing-function: cubic-bezier(.18,.83,.43,.97);
+                height:40px;
+                margin: 10px 0px;
+            }
+            .section_top {
+                display:flex;
+                flex-direction: row;
+                height:30px;
+            }
+            .section_title {
+                font-weight: 900;
+                font-size: 15px;
+                flex: 1 0 auto;
+            }
+            .section_button {
+                font-size: 25px;
+                font-weight: 200;
+                position:relative;
+                top:-8px;
+                flex: 0 0 auto;
+            }
+            .section.activated .section_button::after {
+                content: "-";
+                font-size: 45px;
+                top:-14px;
+                position:relative;
+                font-weight:200;
+            }
+            .section .section_button::after {
+                content: "+";
+            }
+            .endpoint::before{
+                content: "Endpoint: ";
+            }
+            .endpoint {
+                font-family: monospace;
+                margin-bottom: 5px;
+                margin-left:10px;
+            }
+            .delete{
+                background-color: #fdd;
+            }
+            .get{
+                background-color: #dfd;
+            }
+            .post{
+                background-color: #ddf;
             }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="input">
-                <h1>request test</h1>
+                <h1>Altoponix Requests</h1>
                 <br>
-                <b>POST Request</b>
-                <br>
-                <input type="text" id="key" placeholder="key (required)"/><br>
-                <input type="text" id="foliage_feed" placeholder="foliage_feed"/><br>
-                <input type="text" id="atmospheric_temp" placeholder="atmospheric_temp"/><br>
-                <input type="text" id="reservoir_temp" placeholder="reservoir_temp"/><br>
-                <button onclick="set()">Post</button>
-                <br><br>
-                <b>GET Request</b>
-                <br>
-                <input type="text" id="get" placeholder="key"/><br>
-                <button onclick="get()">Get</button>
-                <br>
-                <b>SETTINGS</b>
-                <br><br>
-                Url:
+                Request Url:
                 <select name="url" id="url">
                     <option value="heroku">http://altoponix-database.herokuapp.com</option>
-                    <option value="localhost">http://127.0.0.1:5000</option>
+                    <option value="localhost">http://127.0.0.1:5000/api/v1</option>
                 </select>
+                <div class="section get">
+                    <div class="section_top">
+                        <div class="section_title">Get Monitor</div>
+                        <div class="section_button"></div>
+                    </div>
+                    <div class="endpoint">/monitors/get</div>
+                    <input type="text" id="monitor_id3" placeholder="monitor_id"/><br>
+                    <button onclick="get_monitors()">Get</button>
+                </div>
+                <div class="section post">
+                    <div class="section_top">
+                        <div class="section_title">Update Monitor</div>
+                        <div class="section_button"></div>
+                    </div>
+                    <div class="endpoint">/monitors/update</div>
+                    <input type="text" id="id" placeholder="id (required)"/><br>
+                    <input type="text" id="atmospheric_temp" placeholder="atmospheric_temp"/><br>
+                    <input type="text" id="reservoir_temp" placeholder="reservoir_temp"/><br>
+                    <input type="text" id="light_intensity" placeholder="light_intensity"/><br>
+                    <input type="text" id="soil_moisture" placeholder="soil_moisture"/><br>
+                    <input type="text" id="electrical_conductivity" placeholder="electrical_conductivity"/><br>
+                    <input type="text" id="ph" placeholder="ph"/><br>
+                    <input type="text" id="dissolved_oxygen" placeholder="dissolved_oxygen"/><br>
+                    <input type="text" id="air_flow" placeholder="air_flow"/><br>
+                    <input type="text" id="foliage_feed" placeholder="foliage_feed"/><br>
+                    <input type="text" id="root_stream" placeholder="root_stream"/><br>
+                    <button onclick="update_monitors()">Update</button>
+                </div>
+                <div class="section post">
+                    <div class="section_top">
+                        <div class="section_title">Add Monitor</div>
+                        <div class="section_button"></div>
+                    </div>
+                    <div class="endpoint">/monitors/add</div>
+                    <input type="text" id="monitor_id" placeholder="monitor_id (required)"/><br>
+                    <input type="text" id="user_id" placeholder="user_id (required)"/><br>
+                    <button onclick="add_monitors()">Add</button>
+                </div>
+                <div class="section delete">
+                    <div class="section_top">
+                        <div class="section_title">Reset Monitor</div>
+                        <div class="section_button"></div>
+                    </div>
+                    <div class="endpoint">/monitors/reset</div>
+                    <input type="text" id="monitor_id2" placeholder="monitor_id (required)"/><br>
+                    <button onclick="reset_monitors()">Reset</button>
+                </div>
+                <div class="section delete">
+                    <div class="section_top">
+                        <div class="section_title">Delete Monitor</div>
+                        <div class="section_button"></div>
+                    </div>
+                    <div class="endpoint">/monitors/delete</div>
+                    <input type="text" id="monitor_id4" placeholder="monitor_id (required)"/><br>
+                    <button onclick="delete_monitors()">Delete</button>
+                </div>
+                <hr>
+                <div class="section get">
+                    <div class="section_top">
+                        <div class="section_title">Get Monitors Owned By User</div>
+                        <div class="section_button"></div>
+                    </div>
+                    <div class="endpoint">/users/monitors/get</div>
+                    <input type="text" id="user_id2" placeholder="user_id"/><br>
+                    <button onclick="get_users()">Get</button>
+                </div>
             </div>
             <div class="response">
                 <div id="status" style="width:99vw;line-break:anywhere;font-family:monospace">waiting on query...</div>
                 <pre id="output" style="width:99vw;line-break:anywhere;font-family:monospace;white-space: pre-wrap;"></pre>
+				
             </div>
         </div>
     </body>
     <script type="text/javascript"> 
-        function set() {
+        function update_monitors() {
             var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
             document.getElementById('output').innerHTML = ""
             document.getElementById('status').innerHTML = "waiting..."
             let r = new XMLHttpRequest();
             let json = {
-                "key": document.getElementById('key').value,
-                "foliage_feed": document.getElementById('foliage_feed').value,
+                "id": document.getElementById('id').value,
                 "atmospheric_temp": parseFloat(document.getElementById('atmospheric_temp').value),
                 "reservoir_temp": parseFloat(document.getElementById('reservoir_temp').value),
+                "light_intensity": parseFloat(document.getElementById('light_intensity').value),
+                "soil_moisture": parseFloat(document.getElementById('soil_moisture').value),
+                "electrical_conductivity": parseFloat(document.getElementById('electrical_conductivity').value),
+                "ph": parseFloat(document.getElementById('ph').value),
+                "dissolved_oxygen": parseFloat(document.getElementById('dissolved_oxygen').value),
+                "air_flow": parseFloat(document.getElementById('air_flow').value),
+                "foliage_feed": document.getElementById('foliage_feed').value,
+                "root_stream": document.getElementById('root_stream').value,
             };
+            if (document.getElementById('id').value == "") {
+                json["id"] = null
+            }
             if (document.getElementById('foliage_feed').value == "") {
                 json["foliage_feed"] = null
+            }
+            if (document.getElementById('root_stream').value == "") {
+                json["root_stream"] = null
             }
             r.onload = function(e) {
                 document.getElementById('output').innerHTML = r.responseText
                 document.getElementById('status').innerHTML = "status " + r.status
             }
-            r.open("POST", url + "/set/");
+            r.open("POST", url + "/monitors/update");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
+        function add_monitors() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "monitor_id": document.getElementById('monitor_id').value,
+                "user_id": document.getElementById('user_id').value,
+            };
+            if (document.getElementById('monitor_id').value == "") {
+                json["monitor_id"] = null
+            }
+            if (document.getElementById('user_id').value == "") {
+                json["user_id"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = r.responseText
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/monitors/add");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
+        function reset_monitors() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "monitor_id": document.getElementById('monitor_id2').value,
+            };
+            if (document.getElementById('monitor_id2').value == "") {
+                json["monitor_id"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = r.responseText
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/monitors/reset");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
+        function delete_monitors() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "monitor_id": document.getElementById('monitor_id4').value,
+            };
+            if (document.getElementById('monitor_id4').value == "") {
+                json["monitor_id"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = r.responseText
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/monitors/delete");
             r.setRequestHeader('Content-Type', 'application/json');
             r.send(JSON.stringify(json));
         }
         
-        function get() {
+        function get_monitors() {
             var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
             document.getElementById('output').innerHTML = ""
             document.getElementById('status').innerHTML = "waiting..."
-            let v = document.getElementById('get').value
+            let v = document.getElementById('monitor_id3').value
             let r = new XMLHttpRequest();
             r.onload = function(e) {
                 document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
                 document.getElementById('status').innerHTML = "status " + r.status
             }
             if (v == "") {
-                r.open("GET", url + "/get/");
+                r.open("GET", url + "/monitors/get");
             }else{
-                r.open("GET", url + "/get?key=" + v);
+                r.open("GET", url + "/monitors/get?monitor_id=" + v);
             }
             r.send();
+        }
+
+        function get_users() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let v = document.getElementById('user_id2').value
+            let r = new XMLHttpRequest();
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            if (v == "") {
+                r.open("GET", url + "/users/monitors/get");
+            }else{
+                r.open("GET", url + "/users/monitors/get?user_id=" + v);
+            }
+            r.send();
+        }
+        window.onload = function() {
+            var anchors = document.getElementsByClassName("section_top")
+            for(var i = 0; i < anchors.length; i++) {
+                var anchor = anchors[i];
+                anchor.onclick = function(e) {
+                    if (this.parentElement.classList.contains("activated")) {
+                        this.parentElement.classList.remove("activated")
+                        this.parentElement.style.height = 40;
+                    }else{
+                        this.parentElement.classList.add("activated")
+                        this.parentElement.style.height = this.parentElement.scrollHeight
+                    }
+                    
+                }
+            }
         }
     </script>
 </html>
