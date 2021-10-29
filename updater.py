@@ -23,8 +23,8 @@ def frag_maker():
     # fourcc = cv2.VideoWriter_fourcc(*'H264')
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     tot = cv2.VideoWriter('s2_vids/tot.mp4', fourcc, cap.get(cv2.CAP_PROP_FPS), constants.img_size)
-    tot_frames_per_vid = 1
-    frag_length = 6
+    tot_frames_per_vid = 10
+    frag_length = 15
     counter = 0
     while True:
         start_time = counter / cap.get(cv2.CAP_PROP_FPS)
@@ -45,12 +45,12 @@ def frag_maker():
         for path in [path for path in os.listdir(prefix_path) if constants.finished_identifier in path and '.mp4' in path]:
             os.remove(os.path.join(prefix_path, path))
         os.rename(os.path.join(prefix_path, 'frag.mp4'), os.path.join(prefix_path, 'frag_done_%s.mp4' % round(time.time())))
+        print("New Iter")
 
 
 def json_updater():
     last_uploaded_mp4 = None
     while True:
-        # TODO: finish this
         for path in [path for path in os.listdir(prefix_path) if constants.finished_identifier in path and '.mp4' in path]:
             if last_uploaded_mp4 != path:
                 last_uploaded_mp4 = path
@@ -58,12 +58,9 @@ def json_updater():
                     data = {
                         "id": "672ef79b4d0a4805bc529d1ae44bc26b",
                         "foliage_feed": f.read().hex()}
-                    # data["foliage_feed"] = "None"
                     feed_buffer.append(json.dumps(data))
                     if len(feed_buffer) > buffer_size:
                         del feed_buffer[0]
-        # time.sleep(1 / cap.get(cv2.CAP_PROP_FPS))
-        # print(len(data["foliage_feed"]))
 
 
 def uploader(fps=1):
