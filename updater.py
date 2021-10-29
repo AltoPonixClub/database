@@ -12,7 +12,7 @@ url = "https://altoponix-database.herokuapp.com/api/v1/monitors/update"
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 feed_buffer = []
 buffer_size = 3
-prefix_path = 'vids/frag/'
+prefix_path = 's2_vids/frag/'
 
 def frag_maker():
     try:
@@ -22,7 +22,7 @@ def frag_maker():
         cap = cv2.VideoCapture(os.environ['VIDEO'])
     # fourcc = cv2.VideoWriter_fourcc(*'H264')
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-    tot = cv2.VideoWriter('vids/tot.mp4', fourcc, cap.get(cv2.CAP_PROP_FPS), constants.img_size)
+    tot = cv2.VideoWriter('s2_vids/tot.mp4', fourcc, cap.get(cv2.CAP_PROP_FPS), constants.img_size)
     tot_frames_per_vid = 1
     frag_length = 6
     counter = 0
@@ -57,7 +57,7 @@ def json_updater():
                 with open(os.path.join(prefix_path, path), 'rb') as f:
                     data = {
                         "id": "672ef79b4d0a4805bc529d1ae44bc26b",
-                        "foliage_feed": str(f.read())}
+                        "foliage_feed": f.read().hex()}
                     # data["foliage_feed"] = "None"
                     feed_buffer.append(json.dumps(data))
                     if len(feed_buffer) > buffer_size:
