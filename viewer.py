@@ -22,13 +22,14 @@ def fetch_frag():
                 f.write(vid)
                 feed_buffer.clear()
                 feed_buffer.append(frag_path)
-            for path in sorted(os.listdir("client_vids"))[:-1]:
+
+            for path in sorted([path for path in os.listdir("client_vids") if '.mp4' in path])[:-1]:
                 os.remove(os.path.join("client_vids", path))
         time.sleep(0.1)
 
 def view():
     while True:
-        frags = sorted(os.listdir("client_vids"))
+        frags = sorted([path for path in os.listdir("client_vids") if '.mp4' in path])
         if len(frags) > 0:
             print("Running", frags[0])
             vid_path = os.path.join("client_vids", frags[0])
