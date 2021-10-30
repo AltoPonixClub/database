@@ -13,6 +13,8 @@ headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 feed_buffer = []
 buffer_size = 3
 prefix_path = 's2_vids/frag/'
+tot_frames_per_vid = 10
+frag_length = 5
 
 def frag_maker():
     try:
@@ -23,8 +25,6 @@ def frag_maker():
     # fourcc = cv2.VideoWriter_fourcc(*'H264')
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     tot = cv2.VideoWriter('s2_vids/tot.mp4', fourcc, cap.get(cv2.CAP_PROP_FPS), constants.img_size)
-    tot_frames_per_vid = 10
-    frag_length = 15
     counter = 0
     while True:
         start_time = counter / cap.get(cv2.CAP_PROP_FPS)
@@ -36,13 +36,15 @@ def frag_maker():
             frag.write(frame)
             if counter % tot_frames_per_vid == 0:
                 tot.write(frame)
-            cv2.imshow('frame', frame)
+            cv2.imshow('Raw', frame)
             counter += 1
             time.sleep(1 / cap.get(cv2.CAP_PROP_FPS))
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         frag.release()
-        for path in [path for path in os.listdir(prefix_path) if constants.finished_identifier in path and '.mp4' in path]:
+        done_frag = [path for path in os.listdir(prefix_path) if constants.finished_identifier in path and '.mp4' in path]
+        frag_delete = sorted(done_frag)[0:-1]
+        for path in frag_delete:
             os.remove(os.path.join(prefix_path, path))
         os.rename(os.path.join(prefix_path, 'frag.mp4'), os.path.join(prefix_path, 'frag_done_%s.mp4' % round(time.time())))
         print("New Iter")
@@ -51,24 +53,27 @@ def frag_maker():
 def json_updater():
     last_uploaded_mp4 = None
     while True:
-        for path in [path for path in os.listdir(prefix_path) if constants.finished_identifier in path and '.mp4' in path]:
-            if last_uploaded_mp4 != path:
-                last_uploaded_mp4 = path
-                with open(os.path.join(prefix_path, path), 'rb') as f:
-                    data = {
-                        "id": "672ef79b4d0a4805bc529d1ae44bc26b",
-                        "foliage_feed": f.read().hex()}
-                    feed_buffer.append(json.dumps(data))
-                    if len(feed_buffer) > buffer_size:
-                        del feed_buffer[0]
-
+        done_frag = sorted([path for path in os.listdir(prefix_path) if constants.finished_identifier in path and '.mp4' in path])
+        path = done_frag[0]
+        if last_uploaded_mp4 != path:
+            last_uploaded_mp4 = path
+            with open(os.path.join(prefix_path, path), 'rb') as f:
+                data = {
+                    "id": "672ef79b4d0a4805bc529d1ae44bc26b",
+                    "foliage_feed": f.read().hex()}
+                feed_buffer.append(json.dumps(data))
+                if len(feed_buffer) > buffer_size:
+                    del feed_buffer[0]
 
 def uploader(fps=1):
     counter = 0
+    last_post = None
     while len(feed_buffer) == 0:
         continue
     while True:
-        requests.post(url, data=feed_buffer[-1], headers=headers)
+        if feed_buffer[-1] != last_post:
+            requests.post(url, data=feed_buffer[-1], headers=headers)
+            last_post = feed_buffer[-1]
         time.sleep(1 / fps)
         print(counter := counter + 1)
 
