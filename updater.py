@@ -9,6 +9,7 @@ import os
 import constants
 
 url = "https://altoponix-database.herokuapp.com/api/v1/monitors/update"
+# url = "http://127.0.0.1:5000/api/v1/monitors/update"
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 feed_buffer = []
 buffer_size = 3
