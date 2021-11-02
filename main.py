@@ -27,9 +27,15 @@ def setup_app(app):
 
 setup_app(app)
 
-@app.route('/api/v1/assets', methods=['GET'])
-def get_assets():
-    return str(sorted(os.listdir(vid_path_prefix)))
+@app.route('/api/v1/assets/<frag>', methods=['GET'])
+def get_frag(frag):
+    try:
+        with open(os.path.join(vid_path_prefix, frag), 'rb') as f:
+            return f.read()
+    except Exception as e:
+        return "Frag Doesn't Exist"
+
+    # return str(sorted(os.listdir(vid_path_prefix)))
 
 @app.route('/api/v1/monitors/get', methods=['GET'])
 def get_monitor():

@@ -16,9 +16,9 @@ def fetch_frag():
         feed_encoded = json.loads(data.text)["data"]["foliage_feed"]
         if feed_encoded != last_feed_encoded:
             last_feed_encoded = feed_encoded
+            vid = requests.get("https://altoponix-database.herokuapp.com/api/v1/assets/%s" % feed_encoded).content
             frag_path = "client_vids/frag%s.mp4" % round(time.time())
             with open(frag_path, "wb") as f:
-                vid = bytes.fromhex(feed_encoded)
                 f.write(vid)
                 feed_buffer.clear()
                 feed_buffer.append(frag_path)
