@@ -5,7 +5,6 @@ import http.server
 def main():
     server_address = ('', 8000)
     hls_handler = http.server.SimpleHTTPRequestHandler
-    
     httpd = http.server.ThreadingHTTPServer(server_address, hls_handler)
     httpd.serve_forever()
 

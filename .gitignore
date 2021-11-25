@@ -4,4 +4,6 @@ venv
 .DS_Store
 *.mp4
 *.avi
-
+*.ts
+out1
+master.m3u8

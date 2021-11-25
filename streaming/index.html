@@ -10,7 +10,7 @@
     <script src="hls.js"></script>
     <script>
       var video = document.getElementById('video_hls');
-      var videoSrc = 'streaming/master.m3u8';
+      var videoSrc = 'master.m3u8';
 
       // First check for native browser HLS support
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -33,7 +33,7 @@
     <script src="dash.js"></script>
     <script>
       (function(){
-          var url = "streaming/live.mpd";
+          var url = "live.mpd";
           var player = dashjs.MediaPlayer().create();
           player.initialize(document.querySelector("#video_dash"), url, true);
           player.updateSettings({

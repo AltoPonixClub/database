@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# create a folder in shared memory
-mkdir -p /dev/shm/streaming
-
-# link it to current folder
-if [[ -L hls && -d $(readlink hls) ]]; then
-    echo ""
-else
-    ln -s /dev/shm/streaming streaming
-fi
+# # create a folder in shared memory
+# mkdir -p /dev/shm/streaming
+#
+# # link it to current folder
+# if [[ -L hls && -d $(readlink hls) ]]; then
+#     echo ""
+# else
+#     ln -s /dev/shm/streaming streaming
+# fi
 
 # create video segments for HLS and DASH
 # ffmpeg -y \
@@ -42,5 +42,3 @@ ffmpeg \
     -hls_segment_type mpegts \
     -hls_segment_filename data%02d.ts \
     -master_pl_name master.m3u8 out1
-
-python3 server.py
