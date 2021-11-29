@@ -1,0 +1,191 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+      <style>
+          * {
+              box-sizing: border-box;
+              margin: 0px;
+              padding: 0;
+              font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+              overflow: hidden;
+          }
+          input {
+              width:200px;
+              height:25px;
+              font-size: 15px;
+              margin: 10px;
+              margin-top: 0px;
+              padding-left: 10px;
+              border-radius: 15px;
+              border: 1px #ddd solid;
+          }
+          button {
+              border-radius: 15px;
+              margin: 10px;
+              border: 1px #ddd solid;
+              background: rgb(58, 106, 238);
+              color:white;
+              width:100px;
+              height:25px;
+              font-size:15px;
+              transition: ease-out;
+              transition-duration: 0.3s;
+              margin-top: 0px;
+          }
+          button:hover{
+              background: rgb(109, 148, 255);
+          } 
+          .input { 
+              width:300px; 
+              border-right: 1px #ddd solid;
+              height:100vh;
+              padding: 20px;
+              overflow:auto;
+              flex: 0 0 auto;
+          }
+          .response {
+              overflow:auto;
+              background-color: #eee;
+              padding:10px;
+              flex: 1 0 auto;
+          }
+          .container {
+              display:flex;
+              flex-direction: row;
+              height:100vh;
+          }
+          select{
+              width:250px;
+              height:25px;
+              font-size: 15px;
+              padding-left: 10px;
+          }
+          .section{
+              padding: 10px;
+              border: 1px #ddd solid;
+              border-radius: 10px;
+              transition-duration: 0.5s;
+              transition-timing-function: cubic-bezier(.18,.83,.43,.97);
+              margin: 10px 0px;
+          }
+          .section_top {
+              display:flex;
+              flex-direction: row;
+          }
+          .section_title {
+              font-weight: 900;
+              font-size: 15px;
+              flex: 1 0 auto;
+          }
+          .section_button {
+              font-size: 25px;
+              font-weight: 200;
+              position:relative;
+              top:-8px;
+              flex: 0 0 auto;
+          }
+          .endpoint::before{
+              content: "Endpoint: ";
+          }
+          .endpoint {
+              font-family: monospace;
+              margin-bottom: 5px;
+              margin-left:10px;
+          }
+          .delete{
+              background-color: #fdd;
+          }
+          .get{
+              background-color: #dfd;
+          }
+          .post{
+              background-color: #ddf;
+          }
+      </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="input">
+        <h1>Socket Test (Client)</h1>
+        <br>
+        Request Url:
+        <select name="url" id="url">
+          <option value="heroku">http://altoponix-database.herokuapp.com/</option>
+          <option value="localhost">http://127.0.0.1:5000/</option>
+        </select>
+        <div class="section get">
+          <div class="section_top">
+            <div class="section_title">Connect to Websocket</div>
+            <div class="section_button"></div>
+          </div>
+          <br>
+          <input type="text" id="monitor_id" placeholder="monitor_id"/><br>
+          <button onclick="conn()">Connect</button>
+        </div>
+        <div class="section post">
+          <div class="section_top">
+            <div class="section_title">Send Command</div>
+            <div class="section_button"></div>
+          </div>
+          <br>
+          <input type="text" id="command" placeholder="command"/><br>
+          <button onclick="send()">Send</button>
+        </div>
+      </div>
+      <div class="response">
+        <div id="status" style="width:99vw;line-break:anywhere;font-family:monospace">waiting on connection...</div>
+        <pre id="output" style="width:99vw;line-break:anywhere;font-family:monospace;white-space: pre-wrap;"></pre>
+      </div>
+    </div>
+    <script type="text/javascript" charset="utf-8">
+      var socket = undefined
+      function log(s) {
+        document.getElementById("output").innerHTML += s + "<br>"
+      }
+      function conn() {
+        var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+        if (socket != undefined)
+          socket.disconnect() 
+        try {
+          socket = io.connect(url);
+        } catch(e) {
+          log(e)
+        }
+        document.getElementById("status").innerHTML = "waiting on connection..."
+        document.getElementById("output").innerHTML = ""
+        socket.on('connect', function() {
+          document.getElementById("status").innerHTML = ""
+          socket.emit('query', 
+          {
+            monitor_id: document.getElementById("monitor_id").value
+          });
+          log("Connected to server!")
+        });
+        socket.on('query ok', function(s) {
+          log("query ok")
+        });
+        socket.on('query failed', function(s) {
+          log ("query failed")
+          log(s.reason)
+          socket.disconnect()
+        });
+        socket.on('disconnect', function(s) {
+          log ("Disconnected")
+        });
+        socket.on('command ok', function(s) {
+          log("command ok")
+        });
+        socket.on('command failed', function(s) {
+          log("command failed")
+          log(s.reason)
+        });
+        socket.on('command finish', function(s) {
+          log("command finish")
+        });
+      }
+      function send() {
+        socket.emit("command send", {command: document.getElementById("command").value})
+      }
+  </script>
+  </body>
+</html>

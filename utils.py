@@ -93,7 +93,6 @@ def update_monitor(conn, val):
 def to_string(conn):
     return (pd.read_sql_query("SELECT * FROM monitors", conn))
 
-
 def sqltojson(s):
     json = {}
     for a in s:
@@ -106,7 +105,6 @@ def sqltojson(s):
         else:
             json[k] = t
     return json
-
 
 def get_monitors(conn, key=None):
     cur = conn.cursor()
