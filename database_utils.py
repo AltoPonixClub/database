@@ -177,11 +177,11 @@ def reset_monitor(conn, id):
       """, (id,))
       conn.commit()
     except Exception as e:
-        if str(e).startswith("CHECK constraint failed"):
-            return {"success": False, "cause": "Invalid id"}, 400
-        if str(e).startswith("UNIQUE constraint failed"):
-            return {"success": False, "cause": "monitor_id already exists"}, 400
-        return {"success": False, "cause": "Unknown Error"}, 400
+      if str(e).startswith("CHECK constraint failed"):
+        return {"success": False, "cause": "Invalid id"}, 400
+      if str(e).startswith("UNIQUE constraint failed"):
+        return {"success": False, "cause": "monitor_id already exists"}, 400
+      return {"success": False, "cause": "Unknown Error"}, 400
 
 
 def delete_monitor(conn, id):
