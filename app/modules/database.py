@@ -1,8 +1,8 @@
-from __main__ import app
-from flask import Flask, redirect, url_for, request, abort
+from .. import app
+from . import database_utils
+from flask import redirect, url_for, request
 import threading
 import sqlite3
-import database_utils
 import os
 import time
 

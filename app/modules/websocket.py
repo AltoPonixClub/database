@@ -1,5 +1,6 @@
-from __main__ import socketio
-from flask_socketio import SocketIO, emit
+from .. import socketio
+from flask import request
+from flask_socketio import emit
 
 # Socket Variables
 clients = {}
