@@ -16,28 +16,6 @@ def setup_app(app):
 
 setup_app(app)
 
-# Get Fragment Video 
-# will be deprecated once sftp starts working
-@app.route('/api/v1/assets/<frag>', methods=['GET'])
-def get_frag(frag):
-  try:
-    with open(os.path.join(vid_path_prefix, frag), 'rb') as f:
-      return f.read()
-  except Exception as e:
-    return "Frag Doesn't Exist"
-  # return str(sorted(os.listdir(vid_path_prefix)))
-
-def fetch_frag(content):
-  feed = content["foliage_feed"]
-  vid_name = "frag%s.mp4" % round(time.time())
-  frag_path = os.path.join(vid_path_prefix, vid_name)
-  with open(frag_path, "wb") as f:
-    vid = bytes.fromhex(feed)
-    f.write(vid)
-  for path in sorted([path for path in os.listdir(vid_path_prefix) if '.mp4' in path])[:-2]:
-    os.remove(os.path.join(vid_path_prefix, path))
-  return vid_name
-
 @app.route('/api/v1/monitors/get', methods=['GET'])
 def get_monitor():
   with sqlite3.connect(database_path) as conn:
@@ -51,7 +29,6 @@ def get_monitor():
 def update_monitor():
   with sqlite3.connect(database_path) as conn:
     content = database_utils.isolate_updatable(request.get_json())
-    content["foliage_feed"] = fetch_frag(content) # Key to access vid on filesystem
     if "id" not in content or content["id"] is None:
       return {"success": False,
               "cause": "Missing one or more fields: [id]"}, 400
@@ -61,7 +38,6 @@ def update_monitor():
     if data is not None:
       return data
     return redirect(url_for('home'))
-
 
 @app.route('/api/v1/monitors/add', methods=['POST'])
 def add_monitor():
@@ -91,7 +67,6 @@ def reset_monitor():
         return d
     return redirect(url_for('home'))
 
-
 @app.route('/api/v1/monitors/delete', methods=['POST'])
 def delete_monitor():
   with sqlite3.connect(database_path) as conn:
@@ -103,7 +78,6 @@ def delete_monitor():
     if d is not None:
       return d
     return redirect(url_for('home'))
-
 
 @app.route('/api/v1/owners/get', methods=['GET'])
 def get_owners():

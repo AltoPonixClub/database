@@ -15,6 +15,11 @@ limiter = Limiter(
   key_func=get_remote_address,
   default_limits=["300 per minute"]
 )
+
+@app.route('/', methods=['GET'])
+def home():
+  return ""
+
 from .modules import main as main_blueprint
 app.register_blueprint(main_blueprint)
 
