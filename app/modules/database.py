@@ -33,15 +33,32 @@ def isValidID(id):
 # Get Method: Returns the monitor with the specified monitor_id
 # Argument Input:
 #  "monitor_id": string
+#  "startTime": int (time in millis)
+#  "endTime": int (time in millis)
 # If a monitor_id isn't passed, then returns all monitors
 @app.route('/api/v1/monitors/get', methods=['GET'])
 def get_monitor():
   try: 
+    startTime = request.args.get("startTime")
+    endTime = request.args.get("endTime")
+    if isinstance(startTime, str) and not startTime.isnumeric():
+      startTime = None
+    if isinstance(endTime, str) and not endTime.isnumeric():
+      endTime = None
     # Return All
     if request.args.get('monitor_id') is None:
       data = monitors.find({}, {"_id": 0, "owner": 0})
       dat = {}
       for doc in data:
+        if startTime is not None or endTime is not None:
+          if startTime is None: 
+            startTime = 0
+          if endTime is None: 
+            endTime = 9999999999999
+          for key in doc.keys():
+            if not isinstance(doc[key], dict):
+              continue
+            doc[key] = ({k: v for k,v in doc[key]["history"].items() if int(k) > int(startTime) and int(k) < int(endTime)})
         dat[doc["monitor_id"]] = doc
       return {"success": True, "data": dat}
     # Safety Checking

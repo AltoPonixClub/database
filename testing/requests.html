@@ -131,6 +131,8 @@
                     </div>
                     <div class="endpoint">/monitors/get</div>
                     <input type="text" id="monitor_id3" placeholder="monitor_id"/><br>
+                    <input type="text" id="startTime" placeholder="startTime"/><br>
+                    <input type="text" id="endTime" placeholder="endTime"/><br>
                     <button onclick="get_monitors()">Get</button>
                 </div>
                 <div class="section post">
@@ -304,16 +306,22 @@
             document.getElementById('output').innerHTML = ""
             document.getElementById('status').innerHTML = "waiting..."
             let v = document.getElementById('monitor_id3').value
+            let s = document.getElementById('startTime').value
+            let e = document.getElementById('endTime').value
             let r = new XMLHttpRequest();
             r.onload = function(e) {
                 document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
                 document.getElementById('status').innerHTML = "status " + r.status
             }
-            if (v == "") {
-                r.open("GET", url + "/monitors/get");
-            }else{
-                r.open("GET", url + "/monitors/get?monitor_id=" + v);
-            }
+            let u = new URL(url + "/monitors/get");
+            
+            if (v !== "")
+              u.searchParams.append('monitor_id', v);
+            if (s !== "")
+              u.searchParams.append('startTime', s);
+            if (e !== "")
+              u.searchParams.append('endTime', e);
+            r.open("GET", u);
             r.send();
         }
 
