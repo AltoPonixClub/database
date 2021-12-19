@@ -36,7 +36,7 @@ r.send(JSON.stringify(json));
 
 Must require a key. Any fields that aren't specified are not updated
 Returns 400 if the data is invalid
-See requests.html for documenttation
+See app/modules/database.py for documentation
 
 **Websocket Command Sending**
 Documentation for this is in the file app/modules/websocket.py

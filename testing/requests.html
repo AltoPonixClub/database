@@ -139,7 +139,7 @@
                         <div class="section_button"></div>
                     </div>
                     <div class="endpoint">/monitors/update</div>
-                    <input type="text" id="id" placeholder="id (required)"/><br>
+                    <input type="text" id="id" placeholder="monitor_id (required)"/><br>
                     <input type="text" id="atmospheric_temp" placeholder="atmospheric_temp"/><br>
                     <input type="text" id="reservoir_temp" placeholder="reservoir_temp"/><br>
                     <input type="text" id="light_intensity" placeholder="light_intensity"/><br>
@@ -158,8 +158,8 @@
                         <div class="section_button"></div>
                     </div>
                     <div class="endpoint">/monitors/add</div>
-                    <input type="text" id="monitor_id" placeholder="monitor_id (required)"/><br>
                     <input type="text" id="user_id" placeholder="user_id (required)"/><br>
+                    <input type="text" id="monitor_id" placeholder="monitor_id (required)"/><br>
                     <button onclick="add_monitors()">Add</button>
                 </div>
                 <div class="section delete">
@@ -183,7 +183,7 @@
                 <hr>
                 <div class="section get">
                     <div class="section_top">
-                        <div class="section_title">Get Owners of Monitors</div>
+                        <div class="section_title">Get Owners</div>
                         <div class="section_button"></div>
                     </div>
                     <div class="endpoint">/owners/get</div>
@@ -205,7 +205,7 @@
             document.getElementById('status').innerHTML = "waiting..."
             let r = new XMLHttpRequest();
             let json = {
-                "id": document.getElementById('id').value,
+                "monitor_id": document.getElementById('id').value,
                 "atmospheric_temp": parseFloat(document.getElementById('atmospheric_temp').value),
                 "reservoir_temp": parseFloat(document.getElementById('reservoir_temp').value),
                 "light_intensity": parseFloat(document.getElementById('light_intensity').value),
@@ -218,7 +218,7 @@
                 "root_stream": document.getElementById('root_stream').value,
             };
             if (document.getElementById('id').value == "") {
-                json["id"] = null
+                json["monitor_id"] = null
             }
             if (document.getElementById('foliage_feed').value == "") {
                 json["foliage_feed"] = null
