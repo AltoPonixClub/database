@@ -1,0 +1,80 @@
+<html>
+    <head>
+      <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0px;
+                padding: 0;
+                font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            }
+            input {
+                width:200px;
+                height:25px;
+                font-size: 15px;
+                margin: 10px;
+                margin-top: 10px;
+                padding-left: 10px;
+                border-radius: 15px;
+                border: 1px #ddd solid;
+            }
+            button {
+                border-radius: 15px;
+                margin: 10px;
+                border: 1px #ddd solid;
+                background: rgb(58, 106, 238);
+                color:white;
+                width:100px;
+                height:25px;
+                font-size:15px;
+                transition: ease-out;
+                transition-duration: 0.3s;
+                margin-top: 0px;
+            }
+            button:hover{
+                background: rgb(109, 148, 255);
+            } 
+            .input { 
+                width:300px; 
+                border-right: 1px #ddd solid;
+                height:100vh;
+                padding: 20px;
+                overflow:auto;
+                flex: 0 0 auto;
+            }
+            .container {
+                padding: 20px
+            }
+            video {
+              border: 1px black solid;
+              width: 900px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+          <h1>Altoponix Streaming Test</h1>
+          <input id="id" placeholder="streaming_id"/>
+          <button onclick="get()">Get</button>
+          <br>
+          <div id="fsdiv">
+            <video src="" id="video" style="border: 1px black solid" autoplay controls></video>
+          </div>
+          <br>
+        </div>
+    </body>
+    <script type="text/javascript"> 
+      function get() {
+        let video = document.getElementById('video');
+        let videoSrc = "https://altoponix-cdn.sfo3.digitaloceanspaces.com/streaming/" + document.getElementById("id").value + "/master.m3u8"
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = videoSrc;
+        }else if (Hls.isSupported()) {
+          var hls = new Hls({liveMaxBackBufferLength: 5});
+          hls.loadSource(videoSrc);
+          hls.attachMedia(video);
+        }
+        video.play()
+      }
+    </script>
+</html>
