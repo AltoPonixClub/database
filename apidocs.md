@@ -90,9 +90,9 @@ r.send(JSON.stringify(json));
 }
 ```
 **Extra Notes:**
-``token:`` This is the authentication token used for future API requests. You may store this token in the browser's local storage if you want the user to stay logged in. Authentication tokens will expire after 4 hours, after which the user must log in again. Authentication tokens are hexadecimal strings of length 32.
-``username:`` The username associated with the account
-``user_id:`` The user_id associated with the account
+``token``: This is the authentication token used for future API requests. You may store this token in the browser's local storage if you want the user to stay logged in. Authentication tokens will expire after 4 hours, after which the user must log in again. Authentication tokens are hexadecimal strings of length 32.
+``username``: The username associated with the account
+``user_id``: The user_id associated with the account
 
 **Possible HTTP Codes:**
 | HTTP Code                   | Description                                                        |
@@ -118,7 +118,7 @@ r.send(JSON.stringify(json));
 }
 ```
 **Extra Notes:**
-``token:`` This is the authentication token used for future API requests. You may store this token in the browser's local storage if you want the user to stay logged in. Authentication tokens will expire after 4 hours, after which the user must log in again. Authentication tokens are hexadecimal strings of length 32.
+``token``: This is the authentication token used for future API requests. You may store this token in the browser's local storage if you want the user to stay logged in. Authentication tokens will expire after 4 hours, after which the user must log in again. Authentication tokens are hexadecimal strings of length 32.
 **Possible HTTP Codes:**
 | HTTP Code                   | Description                                                        |
 |-----------------------------|--------------------------------------------------------------------|
@@ -184,8 +184,8 @@ The data returned is then in this structure:
 ```
 where the ``owner`` is the ``owner_id`` of the monitor.
 
-``startTime:`` Filter all data points after this unix timestamp
-``endTime:`` Filter all data points before this unix timestamp
+``startTime``: Filter all data points after this unix timestamp
+``endTime``: Filter all data points before this unix timestamp
 Each measurement (atmospheric_temp, reservoir_temp, etc..) has this data structure:
 ```
 {
@@ -253,9 +253,9 @@ Data measurements like ``atmospheric_temp`` and ``reservoir_temp`` will automati
 **Extra Notes:**
 Only admins can use this method.
 
-``user_id:`` The owner_id of the new monitor
-``monitor_id:`` The monitor_id of the new monitor
-``password:`` The password that the new monitor will use to log in.
+``user_id``: The owner_id of the new monitor
+``monitor_id``: The monitor_id of the new monitor
+``password``: The password that the new monitor will use to log in.
 
 This will fail if there is already a monitor with the same monitor_id.
 
@@ -316,7 +316,7 @@ Only admins can use this method.
 
 ### Get a info about a user
 **Endpoint:** /api/v1/owners/get
-**Allowed Methods:** Get
+**Allowed Methods:** GET
 **Arguments:**
 ```
 "token": string, (required)
@@ -352,9 +352,9 @@ The data returned is then in this structure:
 ⋮
 ```
 
-``monitor_ids:`` a list of the monitor_ids that this user owns.
-``username:`` the username associated with this account.
-``type:`` the type of account. This may be "user" or "admin".
+``monitor_ids``: a list of the monitor_ids that this user owns.
+``username``: the username associated with this account.
+``type``: the type of account. This may be "user" or "admin".
 
 **Possible HTTP Codes:**
 | HTTP Code                   | Description                                                                                                   |
@@ -363,3 +363,34 @@ The data returned is then in this structure:
 | 400 Bad Request             | The user_id or token given was invalid.                                                                  |
 | 401 Unauthorized            | The provided token was invalid.                                                                               |
 | 403 Forbidden               | Listing all users without an admin token was attempted, or accessing another user's data was attempted. |
+
+### Reset a user's password
+**Endpoint:** /api/v1/owners/resetpassword
+**Allowed Methods:** POST
+**JSON Input:**
+```
+{
+  "token": string, (required)
+  "user_id": string, (required)
+  "old_password": string,
+  "new_password": string (required)
+}
+```
+**JSON Output:** None
+
+**Extra Notes:**
+Only users and admins can use this method, and trying to reset another account's password as a user is forbidden.
+
+``old_password`` The old password. This is not required if the user is an admin
+``new_password`` The new password.
+
+After using this method, every session with this user_id will by logged out, and the user must sign in again.
+
+
+**Possible HTTP Codes:**
+| HTTP Code                   | Description                                                    |
+|-----------------------------|----------------------------------------------------------------|
+| 200 OK                      | The request was successful.                                    |
+| 400 Bad Request             | Some arguments weren't provided or are invalid.                |
+| 401 Unauthorized            | The provided token was invalid.                                |
+| 403 Forbidden               | The user doesn't have access to reset this account's password. |
