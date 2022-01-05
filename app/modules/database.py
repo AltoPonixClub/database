@@ -1,10 +1,16 @@
 from .. import app
 from flask import request
 from pymongo import MongoClient
-import threading
+from argon2 import PasswordHasher
 import os
 import time
 import certifi
+import random
+
+# Documentation for the API is located in apidocs.md!
+
+# Token TTL: how long until a token expires (ms)
+TOKEN_MAX_AGE = 1000 * 60 * 60 * 4
 
 # Update typing checks
 TYPINGS = {
@@ -20,36 +26,141 @@ TYPINGS = {
   'root_stream': str,
 }
 
+# Password Validater
+ph = PasswordHasher()
+
+# Sessions
+sessions = {}
+sessions_monitors = {}
+
 # Connect to MongoDB
 client = MongoClient("mongodb+srv://altoponix-db:" + os.environ['DB_PSWD'] + "@altoponix.nej4q.mongodb.net", tlsCAFile=certifi.where())
 db = client.database
 monitors = db.get_collection("monitors")
 users = db.get_collection("users")
 
+# Helper functions
+
 # ALL IDS SHOULD BE 32 CHARS LONG, AND IN HEX FORMAT
 def isValidID(id):
   return not (id is None or not isinstance(id,str) or len(id) != 32 or not id.isalnum())
 
-# Get Method: Returns the monitor with the specified monitor_id
-# Argument Input:
-#  "monitor_id": string
-#  "startTime": int (time in millis)
-#  "endTime": int (time in millis)
-# If a monitor_id isn't passed, then returns all monitors
+# Generate a hexadecimal string of a given lenght
+def generateToken(length):
+  ALPHABET = "0123456789abcdef"
+  chars = ""
+  for _ in range(length):
+    chars = chars + random.choice(ALPHABET)
+  while (chars not in sessions or len([v for v in sessions_monitors if v["token"] == chars]) > 0):
+    chars = ""
+    for _ in range(length):
+      chars = chars + random.choice(ALPHABET)
+  return chars
+
+def getUserCredentials(token, request):
+  if token == "" or token is None or token not in sessions:
+    return ""
+  if round(time.time() * 1000) > sessions[token]["expire_date"] or sessions[token]["ip"] != request.remote_addr:
+    return ""
+  for doc in users.find({"user_id": {'$eq': sessions[token]["user_id"]}}, {"_id": 0}):
+    return doc["type"]
+  return ""
+
+def getMonitorCredentials(token, monitor_id, request):
+  if token == "" or token is None or monitor_id not in sessions_monitors:
+    return False
+  if round(time.time() * 1000) > sessions_monitors[monitor_id]["expire_date"] or sessions_monitors[monitor_id]["ip"] != request.remote_addr:
+    return False
+  return True
+
+
+# LOGIN METHODS
+@app.route('/api/v1/login/user', methods=['POST'])
+def request_login_user():
+  try:
+    args = request.get_json()
+    # Safety Checking
+    if "username" not in args or args["username"] is None or args["username"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [username]"}, 400
+    if "password" not in args or args["password"] is None or args["password"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [password]"}, 400
+    # Get the hash associated with the username
+    for doc in users.find({"username": {'$eq': args["username"]}},{"_id": 0}):
+      # Check if the password matches the hash
+      try:
+        ph.verify(doc["hash"], args["password"])
+      except:
+        return {"success": False, "cause": "Invalid Credentials"}, 401
+      # Generate token
+      token = generateToken(32)
+      sessions[token] = {
+        "user_id": doc["user_id"],
+        "expire_date": round(time.time() * 1000) + TOKEN_MAX_AGE,
+        "ip": request.remote_addr
+      }
+      return {"success": True, "data": {"token": token, "username": doc["username"], "user_id": doc["user_id"]}}
+    return {"success": False, "cause": "Invalid Credentials"}, 401
+  except Exception as e:
+    print(e)
+    return {"success": False, "cause": "An unexpected error occured"}, 500
+
+@app.route('/api/v1/login/monitor', methods=['POST'])
+def request_login_monitor():
+  try:
+    args = request.get_json()
+    # Safety Checking
+    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [monitor_id]"}, 400
+    if "password" not in args or args["password"] is None or args["password"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [password]"}, 400
+    # Get the has associated with the monitor_id
+    for doc in monitors.find({"monitor_id": {'$eq': args["monitor_id"]}},{"_id": 0}):
+      # Check if the password matches the hash
+      try:
+        ph.verify(doc["hash"], args["password"])
+      except:
+        return {"success": False, "cause": "Invalid Credentials"}, 401
+      # Generate token
+      token = generateToken(32)
+      sessions_monitors[args["monitor_id"]] = {
+        "token": token,
+        "expire_date": round(time.time() * 1000) + TOKEN_MAX_AGE,
+        "ip": request.remote_addr
+      }
+      return {"success": True, "data": {"token": token}}
+    return {"success": False, "cause": "Invalid Credentials"}, 401
+  except Exception as e:
+    print(e)
+    return {"success": False, "cause": "An unexpected error occured"}, 500
+
+# MONITOR METHODS
 @app.route('/api/v1/monitors/get', methods=['GET'])
 def get_monitor():
   try: 
+    # Safety Checking
+    if request.args.get("token") == "" or request.args.get("token") is None:
+      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
+    creds = getUserCredentials(request.args.get("token"), request)
+    if creds == "":
+      return {"success": False, "cause": "Invalid token"}, 401
+      
+    # Argument processing
     startTime = request.args.get("startTime")
     endTime = request.args.get("endTime")
     if isinstance(startTime, str) and not startTime.isnumeric():
       startTime = None
     if isinstance(endTime, str) and not endTime.isnumeric():
       endTime = None
-    # Return All
+    # Return all monitors if monitor_id isn't provided
     if request.args.get('monitor_id') is None:
-      data = monitors.find({}, {"_id": 0, "owner": 0})
+      if creds == "user":
+        return {"success": False, "cause": "Forbidden"}, 403
       dat = {}
-      for doc in data:
+      for doc in monitors.find({}, {"_id": 0, "hash": 0}):
         if startTime is not None or endTime is not None:
           if startTime is None: 
             startTime = 0
@@ -60,38 +171,46 @@ def get_monitor():
               continue
             doc[key] = ({k: v for k,v in doc[key]["history"].items() if int(k) > int(startTime) and int(k) < int(endTime)})
         dat[doc["monitor_id"]] = doc
+        doc.pop("monitor_id", None)
       return {"success": True, "data": dat}
-    # Safety Checking
+    # If monitor_id is provided, get the monitor
     if not isValidID(request.args.get('monitor_id')):
       return {"success": False, "cause": "Invalid monitor_id"}, 400
-    data = monitors.find({"monitor_id": {'$eq': request.args.get('monitor_id')}}, {"_id": 0, "monitor_id": 0, "owner": 0})
+    data = monitors.find({"monitor_id": {'$eq': request.args.get('monitor_id')}}, {"_id": 0, "monitor_id": 0, "hash": 0})
     for doc in data:
+      # Check credentials
+      if creds == "user" and doc["owner"] != sessions[request.args.get("token")]["user_id"]:
+        return {"success": False, "cause": "Forbidden"}, 403
+      doc.pop('owner', None)
       return {"success": True, "data": doc}
     return {"success": False, "cause": "Invalid monitor_id"}, 400
   except Exception as e:
     print(e)
-    return {"success": False, "cause": "Bad Request"}, 400
+    return {"success": False, "cause": "An unexpected error occured"}, 500
 
-# Update Method: Updates the monitor with the specified monitor_id
-# JSON Input:
-# {
-#  "monitor_id": string (required)
-#  "atmospheric_temp": number
-#  "reservoir_temp":
-#  etc ...
-# }
 @app.route('/api/v1/monitors/update', methods=['POST'])
 def update_monitor():
   try:
+    args = request.get_json()
     # Get the current time
     t = round(time.time() * 1000)
     # Safety Checking
-    args = request.get_json()
-    if "monitor_id" not in args or args["monitor_id"] is None:
+    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
       return {"success": False,
             "cause": "Missing one or more fields: [monitor_id]"}, 400
     if not isValidID(args["monitor_id"]):
       return {"success": False, "cause": "Invalid monitor_id"}, 400
+
+    # Credential Check
+    if args.get("token") == "" or args.get("token") is None:
+      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
+    creds = getMonitorCredentials(args.get("token"), args.get("monitor_id"), request)
+    if getUserCredentials(args.get("token"), request) != "admin":
+      if not creds:
+        return {"success": False, "cause": "Invalid token"}, 401
+      if sessions_monitors[args.get("monitor_id")]["token"] != args.get("token"):
+        return {"success": False, "cause": "Forbidden"}, 403
+
     for doc in monitors.find({"monitor_id": {'$eq': args["monitor_id"]}}, {"_id": 0, "monitor_id": 0, "owner": 0}):
       upd = {}
       keys = doc.keys()
@@ -119,7 +238,7 @@ def update_monitor():
         else:
           upd[arg[0]] = arg[1]
       if upd == {}:
-        return {"success": False, "cause": "Couldn't update any fields"}, 400
+        return {"success": False, "cause": "Couldn't update any measurements"}, 400
       else:
         monitors.update_one({"monitor_id": {'$eq': args["monitor_id"]}}, {"$set": upd})
       return {"success": True}
@@ -127,25 +246,32 @@ def update_monitor():
     return {"success": False, "cause": "Invalid monitor_id"}, 400
   except Exception as e:
     print(e)
-    return {"success": False, "cause": "Bad Request"}, 400
+    return {"success": False, "cause": "An unexpected error occured"}, 500
 
-# Add Method: Adds a monitor with the specified monitor_id to the specified user_id
-# JSON Input:
-# {
-#  "monitor_id": string (required)
-#  "user_id": string (required)
-# }
 @app.route('/api/v1/monitors/add', methods=['POST'])
 def add_monitor():
   try:
     args = request.get_json()
+
+    # Credential Check
+    if args.get("token") == "" or args.get("token") is None:
+      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
+    creds = getUserCredentials(args.get("token"), request)
+    if creds == "user":
+      return {"success": False, "cause": "Forbidden"}, 403
+    if creds == "":
+      return {"success": False, "cause": "Invalid token"}, 401
+
     # Safety Checking
-    if "user_id" not in args or args["user_id"] is None:
+    if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
       return {"success": False,
               "cause": "Missing one or more fields: [user_id]"}, 400
-    if "monitor_id" not in args or args["monitor_id"] is None:
+    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
       return {"success": False,
               "cause": "Missing one or more fields: [monitor_id]"}, 400
+    if "password" not in args or args["password"] is None or args["password"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [password]"}, 400
     if not isValidID(args["user_id"]):
       return {"success": False,
               "cause": "Invalid user_id"}, 400
@@ -169,7 +295,8 @@ def add_monitor():
         "foliage_feed": "",
         "root_stream": "",
         "monitor_id": args["monitor_id"],
-        "owner": args["user_id"]
+        "owner": args["user_id"], 
+        "hash": ph.hash(args["password"])
       })
       dat = doc['monitor_ids']
       dat.append(args["monitor_id"])
@@ -179,24 +306,30 @@ def add_monitor():
     return {"success": False, "cause": "Invalid user_id"}, 400
   except Exception as e:
     print(e)
-    return {"success": False, "cause": "Bad Request"}, 400
+    return {"success": False, "cause": "An unexpected error occured"}, 500
 
-# Reset Method: Reset a monitor's data with the specified monitor_id
-# JSON Input:
-# {
-#  "monitor_id": string (required)
-# }
 @app.route('/api/v1/monitors/reset', methods=['POST'])
 def reset_monitor():
   try:
     args = request.get_json()
+
+    # Credential Check
+    if args.get("token") == "" or args.get("token") is None:
+      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
+    creds = getUserCredentials(args.get("token"), request)
+    if creds == "user":
+      return {"success": False, "cause": "Forbidden"}, 403
+    if creds == "":
+      return {"success": False, "cause": "Invalid token"}, 401
+
     # Safety Checking
-    if "monitor_id" not in args or args["monitor_id"] is None:
+    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
       return {"success": False,
               "cause": "Missing one or more fields: [monitor_id]"}, 400
     if not isValidID(args["monitor_id"]):
       return {"success": False,
               "cause": "Invalid monitor_id"}, 400
+
     result = monitors.update_one({"monitor_id": {'$eq': args["monitor_id"]}}, {"$set": {
       "atmospheric_temp": {"value": None, "history": {}},
       "reservoir_temp": {"value": None, "history": {}},
@@ -215,19 +348,24 @@ def reset_monitor():
     return {"success": False, "cause": "Invalid monitor_id"}, 400
   except Exception as e:
     print(e)
-    return {"success": False, "cause": "Bad Request"}, 400
+    return {"success": False, "cause": "An unexpected error occured"}, 500
 
-# Delete Method: Deletes a monitor with the specified monitor_id. Also removes it from its owner's monitor list
-# JSON Input:
-# {
-#  "monitor_id": string (required)
-# }
 @app.route('/api/v1/monitors/delete', methods=['POST'])
 def delete_monitor():
   try:
     args = request.get_json()
+
+    # Credential Check
+    if args.get("token") == "" or args.get("token") is None:
+      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
+    creds = getUserCredentials(args.get("token"), request)
+    if creds == "user":
+      return {"success": False, "cause": "Forbidden"}, 403
+    if creds == "":
+      return {"success": False, "cause": "Invalid token"}, 401
+
     # Safety Checking
-    if "monitor_id" not in args or args["monitor_id"] is None:
+    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
       return {"success": False,
               "cause": "Missing one or more fields: [monitor_id]"}, 400
     if not isValidID(args["monitor_id"]):
@@ -238,7 +376,7 @@ def delete_monitor():
       owner_id = doc["owner"]
       # If the owner id associated with the monitor is invalid somehow????? then abort
       if owner_id is None or not isValidID(owner_id):
-        return {"success": False, "cause": "An unkown error occured. Please try again in a few minutes"}, 500
+        return {"success": False, "cause": "An unkown error occured."}, 500
       # Find the owner record with the owner_id
       for user in users.find({"user_id": {'$eq': owner_id}}):
         # Delete
@@ -248,39 +386,49 @@ def delete_monitor():
         users.update_one({"user_id": {'$eq': owner_id}}, {"$set": {"monitor_ids": ids}})
         return {"success": True}
       # If the owner record wasn't found???? (shouldn't happen)
-      return {"success": False, "cause": "An unkown error occured. Please try again in a few minutes"}, 500
+      return {"success": False, "cause": "An unkown error occured."}, 500
     # If monitor isn't found
     return {"success": False, "cause": "Invalid monitor_id"}, 400
   except Exception as e:
     print(e)
-    return {"success": False, "cause": "Bad Request"}, 400
+    return {"success": False, "cause": "An unexpected error occured"}, 500
 
-# OWNER METHODS
-
-# Get Method: Gets the owner given the specified user_id
-# Argument Input:
-#  "user_id": string
-# If a user_id isn't passed, return all
+# USER METHODS
 @app.route('/api/v1/owners/get', methods=['GET'])
 def get_users():
   try:
+    # Credential Check
+    if request.args.get("token") == "" or request.args.get("token") is None:
+      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
+    creds = getUserCredentials(request.args.get("token"), request)
+    if creds == "":
+      return {"success": False, "cause": "Invalid token"}, 401
     user_id = request.args.get('user_id')
+    if creds == "user" and user_id != sessions[request.args.get("token")]["user_id"]:
+      return {"success": False, "cause": "Forbidden"}, 403
+
+    # Return all users if user_id isn't given
     if user_id is None:
+      # Credential Check
+      if creds == "user":
+        return {"success": False, "cause": "Forbidden"}, 403
       dat = {}
-      data = users.find({}, {"_id": 0})
+      data = users.find({}, {"_id": 0, "hash": 0})
       for doc in data:
         dat[doc["user_id"]] = doc
+        doc.pop("user_id", None)
       return {"success": True, "data": dat}
-    # Safety Checking
+    
+    # If user_id is given, return the user's data
     if not isValidID(user_id):
       return {"success": False,
               "cause": "Invalid user_id"}, 400
-    for doc in users.find({"user_id": {'$eq': user_id}},{"_id": 0, "user_id": 0}):
+    for doc in users.find({"user_id": {'$eq': user_id}},{"_id": 0, "user_id": 0, "hash": 0}):
       return {"success": True, "data": doc}
     return {"success": False, "cause": "Invalid user_id"}, 400
   except Exception as e:
     print(e)
-    return {"success": False, "cause": "Bad Request"}, 400
+    return {"success": False, "cause": "An unexpected error occured"}, 500
 
 # Disabled for now
 # @app.route('/api/v1/owners/add', methods=['POST'])
@@ -304,3 +452,5 @@ def get_users():
 #   except Exception as e:
 #     print(e)
 #     return {"success": False, "cause": "Bad Request"}, 400
+
+

@@ -2,6 +2,8 @@ from .. import socketio
 from flask import request
 from flask_socketio import emit
 
+# Documentation is located in wsdocs.md!
+
 # Socket Variables
 clients = {}
 devices = {}
