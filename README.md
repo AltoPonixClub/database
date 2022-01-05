@@ -2,6 +2,7 @@
 
 API documentation is located [here.](apidocs.md)
 Websocket documentation is located [here.](wsdocs.md)
+Login system details are located [here.](logindocs.md)
   
 **Adding more modules**
 

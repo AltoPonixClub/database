@@ -51,7 +51,7 @@ def generateToken(length):
   chars = ""
   for _ in range(length):
     chars = chars + random.choice(ALPHABET)
-  while (chars not in sessions or len([v for v in sessions_monitors if v["token"] == chars]) > 0):
+  while (chars in sessions or len([v for v in sessions_monitors if v["token"] == chars]) > 0):
     chars = ""
     for _ in range(length):
       chars = chars + random.choice(ALPHABET)
