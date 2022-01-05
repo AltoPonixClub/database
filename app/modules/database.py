@@ -6,6 +6,7 @@ import os
 import time
 import certifi
 import random
+import copy
 
 # Documentation for the API is located in apidocs.md!
 
@@ -426,6 +427,53 @@ def get_users():
     for doc in users.find({"user_id": {'$eq': user_id}},{"_id": 0, "user_id": 0, "hash": 0}):
       return {"success": True, "data": doc}
     return {"success": False, "cause": "Invalid user_id"}, 400
+  except Exception as e:
+    print(e)
+    return {"success": False, "cause": "An unexpected error occured"}, 500
+
+@app.route('/api/v1/owners/resetpassword', methods=['POST'])
+def reset_user_password():
+  try:
+    args = request.get_json()
+
+    # Credential Check
+    if args.get("token") == "" or args.get("token") is None:
+      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
+    creds = getUserCredentials(args.get("token"), request)
+    if creds == "":
+      return {"success": False, "cause": "Invalid token"}, 401
+
+    # Safety Checking
+    if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [user_id]"}, 400
+    if creds != "admin" and ("old_password" not in args or args["old_password"] is None or args["old_password"] == ""):
+      return {"success": False,
+              "cause": "Missing one or more fields: [old_password]"}, 400
+    if "new_password" not in args or args["new_password"] is None or args["new_password"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [new_password]"}, 400
+    if not isValidID(args["user_id"]):
+      return {"success": False,
+              "cause": "Invalid user_id"}, 400
+
+    if creds == "user" and args.get("user_id") != sessions[args.get("token")]["user_id"]:
+      return {"success": False, "cause": "Forbidden"}, 403
+
+    for doc in users.find({"user_id": {'$eq': args["user_id"]}}, {"_id": 0, "user_id": 0}):
+      if creds != "admin":
+        try:
+          ph.verify(doc["hash"], args["old_password"])
+        except:
+          return {"success": False, "cause": "Invalid Credentials"}, 401
+      users.update_one({"user_id": {'$eq': args["user_id"]}}, {"$set": {"hash": ph.hash(args["new_password"])}})
+      # Log out any sessions related to that user
+      for session in copy.deepcopy(sessions):
+        if sessions[session]["user_id"] == args["user_id"]:
+            sessions.pop(session, None)
+      return {"success": True}
+    # If user isn't found
+    return {"success": False, "cause": "Invalid Credentials"}, 400
   except Exception as e:
     print(e)
     return {"success": False, "cause": "An unexpected error occured"}, 500

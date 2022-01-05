@@ -216,6 +216,17 @@
                     <input type="text" id="user_id2" placeholder="user_id"/><br>
                     <button onclick="get_users()">Get</button>
                 </div>
+                <div class="section delete">
+                  <div class="section_top">
+                      <div class="section_title">Reset User Password</div>
+                      <div class="section_button"></div>
+                  </div>
+                  <div class="endpoint">/owners/resetpassowrd</div>
+                  <input type="text" id="user_id3" placeholder="user_id (required)"/><br>
+                  <input type="text" id="old_password" placeholder="old_password"/><br>
+                  <input type="text" id="new_password" placeholder="new_password (required)"/><br>
+                  <button onclick="reset_password_user()">Reset</button>
+              </div>
             </div>
             <div class="response">
                 <div id="status" style="width:99vw;line-break:anywhere;font-family:monospace">waiting on query...</div>
@@ -413,6 +424,33 @@
             r.open("GET", u)
             r.send();
         }
+
+        function reset_password_user() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "user_id": document.getElementById('user_id3').value,
+                "old_password": document.getElementById('old_password').value,
+                "new_password": document.getElementById('new_password').value,
+                "token": document.getElementById('token').value,
+            };
+            if (document.getElementById('old_password').value == "") {
+                json["old_password"] = null
+            }
+            if (document.getElementById('new_password').value == "") {
+                json["new_password"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/owners/resetpassword");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
         window.onload = function() {
             var anchors = document.getElementsByClassName("section_top")
             for(var i = 0; i < anchors.length; i++) {
