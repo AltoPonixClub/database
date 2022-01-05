@@ -4,6 +4,8 @@ The backend server uses [Socket-IO](https://python-socketio.readthedocs.io/en/la
 
 The endpoint for web socket connections is ``https://altoponix-database.herokuapp.com``. For local testing, ``http://127.0.0.1:5000`` is used.
 
+Currently, heroku is quite slow, and websocket connections don't really work. You can test the websocket by running this server locally.
+
 ## Outline
 There are two types of clients: the user and the monitor. Only the user is able to send commands to the monitor. Both connect to the backend server to send/receive commands.
 

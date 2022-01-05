@@ -370,22 +370,23 @@ The data returned is then in this structure:
 **JSON Input:**
 ```
 {
-  "token": string, (required)
-  "user_id": string, (required)
-  "old_password": string,
-  "new_password": string (required)
+	"token": string, (required)
+	"user_id": string, (required)
+	"old_password": string,
+	"new_password": string (required)
 }
+
 ```
 **JSON Output:** None
 
 **Extra Notes:**
 Only users and admins can use this method, and trying to reset another account's password as a user is forbidden.
 
+  
 ``old_password`` The old password. This is not required if the user is an admin
 ``new_password`` The new password.
 
 After using this method, every session with this user_id will by logged out, and the user must sign in again.
-
 
 **Possible HTTP Codes:**
 | HTTP Code                   | Description                                                    |
