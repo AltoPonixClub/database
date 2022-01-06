@@ -2,8 +2,10 @@
 # Database API Documentation
 This document outlines the various endpoints and workings of the database API.
 
+For testing this API, use the HTML page testing/requests.html. Select the request URL and fill in the fields. 
+
 ## Endpoints
-This database service is currently being hosted at ``https://altoponix-database.herokuapp.com``. Any API requests should be sent to this URL. For testing purposes, you can run ``main.py`` locally and change this endpoint to ``http://127.0.0.1``.
+This database service is currently being hosted at ``https://altoponix-database.herokuapp.com``. Any API requests should be sent to this URL. For testing purposes, you can run ``main.py`` locally and change this endpoint to ``http://127.0.0.1:5000``.
 
 ## Permissions
 There are two ways to obtain log in: logging in as a user (from the website), or logging in as a monitor. A user will be able to access their monitors, while a monitor can only add new measurements to stored dataa.
@@ -46,6 +48,7 @@ data = requests.get('https://altoponix-database.herokuapp.com/api/v1/monitors/ge
 ```
 **POST Requests**
 Post requests are done by sending a JSON object to the endpoint. A string representation of the JSON object is acceptable.
+**The HTTP Request must have the Content-Type header set to application/json**.
 Example (python):
 ```
 url = "https://altoponix-database.herokuapp.com/api/v1/monitors/update"

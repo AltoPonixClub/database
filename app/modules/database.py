@@ -9,6 +9,9 @@ import random
 import copy
 
 # Documentation for the API is located in apidocs.md!
+if 'DB_PSWD' not in os.environ:
+  print("Database Password Missing! Contact admin for help.")
+  exit()
 
 # Token TTL: how long until a token expires (ms)
 TOKEN_MAX_AGE = 1000 * 60 * 60 * 4
@@ -79,6 +82,9 @@ def getMonitorCredentials(token, monitor_id, request):
 @app.route('/api/v1/login/user', methods=['POST'])
 def request_login_user():
   try:
+    if (request.content_type != "application/json"):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
     # Safety Checking
     if "username" not in args or args["username"] is None or args["username"] == "":
@@ -110,6 +116,9 @@ def request_login_user():
 @app.route('/api/v1/login/monitor', methods=['POST'])
 def request_login_monitor():
   try:
+    if (request.content_type != "application/json"):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
     # Safety Checking
     if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
@@ -192,6 +201,9 @@ def get_monitor():
 @app.route('/api/v1/monitors/update', methods=['POST'])
 def update_monitor():
   try:
+    if (request.content_type != "application/json"):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
     # Get the current time
     t = round(time.time() * 1000)
@@ -252,8 +264,10 @@ def update_monitor():
 @app.route('/api/v1/monitors/add', methods=['POST'])
 def add_monitor():
   try:
+    if (request.content_type != "application/json"):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
-
     # Credential Check
     if args.get("token") == "" or args.get("token") is None:
       return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
@@ -312,6 +326,9 @@ def add_monitor():
 @app.route('/api/v1/monitors/reset', methods=['POST'])
 def reset_monitor():
   try:
+    if (request.content_type != "application/json"):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
 
     # Credential Check
@@ -354,6 +371,9 @@ def reset_monitor():
 @app.route('/api/v1/monitors/delete', methods=['POST'])
 def delete_monitor():
   try:
+    if (request.content_type != "application/json"):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
 
     # Credential Check
@@ -434,6 +454,9 @@ def get_users():
 @app.route('/api/v1/owners/resetpassword', methods=['POST'])
 def reset_user_password():
   try:
+    if (request.content_type != "application/json"):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
 
     # Credential Check
