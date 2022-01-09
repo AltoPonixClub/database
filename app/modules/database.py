@@ -82,7 +82,8 @@ def getMonitorCredentials(token, monitor_id, request):
 @app.route('/api/v1/login/user', methods=['POST'])
 def request_login_user():
   try:
-    if (request.content_type != "application/json"):
+    print(request.content_type)
+    if ('application/json' not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -116,7 +117,7 @@ def request_login_user():
 @app.route('/api/v1/login/monitor', methods=['POST'])
 def request_login_monitor():
   try:
-    if (request.content_type != "application/json"):
+    if ("application/json" in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -201,7 +202,7 @@ def get_monitor():
 @app.route('/api/v1/monitors/update', methods=['POST'])
 def update_monitor():
   try:
-    if (request.content_type != "application/json"):
+    if ("application/json" in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -264,7 +265,7 @@ def update_monitor():
 @app.route('/api/v1/monitors/add', methods=['POST'])
 def add_monitor():
   try:
-    if (request.content_type != "application/json"):
+    if ("application/json" in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -326,7 +327,7 @@ def add_monitor():
 @app.route('/api/v1/monitors/reset', methods=['POST'])
 def reset_monitor():
   try:
-    if (request.content_type != "application/json"):
+    if ("application/json" in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -371,7 +372,7 @@ def reset_monitor():
 @app.route('/api/v1/monitors/delete', methods=['POST'])
 def delete_monitor():
   try:
-    if (request.content_type != "application/json"):
+    if ("application/json" in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -454,7 +455,7 @@ def get_users():
 @app.route('/api/v1/owners/resetpassword', methods=['POST'])
 def reset_user_password():
   try:
-    if (request.content_type != "application/json"):
+    if ("application/json" in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
