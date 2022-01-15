@@ -67,8 +67,6 @@ def getUserCredentials(token, request):
   if round(time.time() * 1000) > sessions[token]["expire_date"] and sessions[token]["expire_date"] != -1:
     sessions.pop(token, None)
     return ""
-  if sessions[token]["ip"] != request.remote_addr:
-    return ""
   for doc in users.find({"user_id": {'$eq': sessions[token]["user_id"]}}, {"_id": 0}):
     return doc["type"]
   return ""
@@ -589,7 +587,7 @@ def reset_user_password():
       # Log out any sessions related to that user
       for session in copy.deepcopy(sessions):
         if sessions[session]["user_id"] == args["user_id"]:
-            sessions.pop(session, None)
+          sessions.pop(session, None)
       return {"success": True}
     # If user isn't found
     return {"success": False, "cause": "Invalid Credentials"}, 400
