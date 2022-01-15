@@ -81,7 +81,8 @@ r.send(JSON.stringify(json));
 ```
 {
 	"username": string,
-	"password": string
+	"password": string,
+	"persist": bool
 }
 ```
 **JSON Output:**
@@ -93,6 +94,7 @@ r.send(JSON.stringify(json));
 }
 ```
 **Extra Notes:**
+``persist``: If this is true, the authentication token will not expire and can only be expired when that user logs out or if the password is reset.
 ``token``: This is the authentication token used for future API requests. You may store this token in the browser's local storage if you want the user to stay logged in. Authentication tokens will expire after 4 hours, after which the user must log in again. Authentication tokens are hexadecimal strings of length 32.
 ``username``: The username associated with the account
 ``user_id``: The user_id associated with the account
@@ -111,7 +113,8 @@ r.send(JSON.stringify(json));
 ```
 {
 	"monitor_id": string,
-	"password": string
+	"password": string,
+	"persist": bool
 }
 ```
 **JSON Output:**
@@ -121,6 +124,7 @@ r.send(JSON.stringify(json));
 }
 ```
 **Extra Notes:**
+``persist``: If this is true, the authentication token will not expire and can only be expired when that user logs out or if the password is reset.
 ``token``: This is the authentication token used for future API requests. You may store this token in the browser's local storage if you want the user to stay logged in. Authentication tokens will expire after 4 hours, after which the user must log in again. Authentication tokens are hexadecimal strings of length 32.
 **Possible HTTP Codes:**
 | HTTP Code                   | Description                                                        |
@@ -129,9 +133,93 @@ r.send(JSON.stringify(json));
 | 400 Bad Request             | At least one of the monitor_id or password arguments are missing.    |
 | 401 Unauthorized            | Invalid credentials were provided, and the login was unsuccessful. |
 
+### Logging out as a user
+**Endpoint:** /api/v1/logout/user
+**Allowed Methods:** POST
+**JSON Input:**
+```
+{
+	"user_id": string (required),
+	"token": string (required),
+}
+```
+**JSON Output:** None
+**Extra Notes:**
+This method will remove the current token from the active tokens list.
+
+**Possible HTTP Codes:**
+| HTTP Code                   | Description                                                        |
+|-----------------------------|--------------------------------------------------------------------|
+| 200 OK                      | The logout was successful.                                           |
+| 400 Bad Request             | At least one of the user_id or token arguments are missing.    |
+| 401 Unauthorized            | Invalid credentials were provided, and the logout was unsuccessful. |
+
+
+### Logging out as a monitor
+**Endpoint:** /api/v1/logout/monitor
+**Allowed Methods:** POST
+**JSON Input:**
+```
+{
+	"monitor_id": string (required),
+	"token": string (required)
+}
+```
+**JSON Output:** None
+**Extra Notes:**
+This method will remove the current token from the active tokens list.
+
+**Possible HTTP Codes:**
+| HTTP Code                   | Description                                                        |
+|-----------------------------|--------------------------------------------------------------------|
+| 200 OK                      | The logout was successful.                                           |
+| 400 Bad Request             | At least one of the monitor_id or token arguments are missing.    |
+| 401 Unauthorized            | Invalid credentials were provided, and the logout was unsuccessful. |
+
 # All Methods
 
 Authentication tokens are obtained by logging in (see above methods).
+
+### Verifying a user token
+**Endpoint:** /api/v1/login/user/verify
+**Allowed Methods:** POST
+**JSON Input:**
+```
+{
+	"user_id": string (required),
+	"token": string (required)
+}
+```
+**Output:** ``true`` if the token is valid, ``false`` if it isn't
+**Extra Notes:**
+Use this method to check if a stored token is invalid before doing any other methods.
+
+**Possible HTTP Codes:**
+| HTTP Code                   | Description                                                        |
+|-----------------------------|--------------------------------------------------------------------|
+| 200 OK                      | The request was successful.                                           |
+| 400 Bad Request             | At least one of the user_id or token arguments are missing.    |
+
+### Verifying a monitor token
+**Endpoint:** /api/v1/login/monitor/verify
+**Allowed Methods:** POST
+**JSON Input:**
+```
+{
+	"monitor_id": string (required),
+	"token": string (required)
+}
+```
+**Output:** ``true`` if the token is valid, ``false`` if it isn't
+**Extra Notes:**
+Use this method to check if a stored token is invalid before doing any other methods.
+
+**Possible HTTP Codes:**
+| HTTP Code                   | Description                                                        |
+|-----------------------------|--------------------------------------------------------------------|
+| 200 OK                      | The request was successful.                                           |
+| 400 Bad Request             | At least one of the monitor_id or token arguments are missing.    |
+
 
 ### Get a monitor's data
 **Endpoint:** /api/v1/monitors/get

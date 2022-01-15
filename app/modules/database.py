@@ -64,7 +64,10 @@ def generateToken(length):
 def getUserCredentials(token, request):
   if token == "" or token is None or token not in sessions:
     return ""
-  if round(time.time() * 1000) > sessions[token]["expire_date"] or sessions[token]["ip"] != request.remote_addr:
+  if round(time.time() * 1000) > sessions[token]["expire_date"] and sessions[token]["expire_date"] != -1:
+    sessions.pop(token, None)
+    return ""
+  if sessions[token]["ip"] != request.remote_addr:
     return ""
   for doc in users.find({"user_id": {'$eq': sessions[token]["user_id"]}}, {"_id": 0}):
     return doc["type"]
@@ -82,7 +85,6 @@ def getMonitorCredentials(token, monitor_id, request):
 @app.route('/api/v1/login/user', methods=['POST'])
 def request_login_user():
   try:
-    print(request.content_type)
     if ('application/json' not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
@@ -103,9 +105,12 @@ def request_login_user():
         return {"success": False, "cause": "Invalid Credentials"}, 401
       # Generate token
       token = generateToken(32)
+      expireDate = round(time.time() * 1000) + TOKEN_MAX_AGE
+      if "persist" in args and args["persist"]:
+        expireDate = -1
       sessions[token] = {
         "user_id": doc["user_id"],
-        "expire_date": round(time.time() * 1000) + TOKEN_MAX_AGE,
+        "expire_date": expireDate,
         "ip": request.remote_addr
       }
       return {"success": True, "data": {"token": token, "username": doc["username"], "user_id": doc["user_id"]}}
@@ -117,7 +122,7 @@ def request_login_user():
 @app.route('/api/v1/login/monitor', methods=['POST'])
 def request_login_monitor():
   try:
-    if ("application/json" in request.content_type):
+    if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -137,13 +142,99 @@ def request_login_monitor():
         return {"success": False, "cause": "Invalid Credentials"}, 401
       # Generate token
       token = generateToken(32)
+      token = generateToken(32)
+      expireDate = round(time.time() * 1000) + TOKEN_MAX_AGE
+      if "persist" in args and args["persist"]:
+        expireDate = -1
       sessions_monitors[args["monitor_id"]] = {
         "token": token,
-        "expire_date": round(time.time() * 1000) + TOKEN_MAX_AGE,
+        "expire_date": expireDate,
         "ip": request.remote_addr
       }
       return {"success": True, "data": {"token": token}}
     return {"success": False, "cause": "Invalid Credentials"}, 401
+  except Exception as e:
+    print(e)
+    return {"success": False, "cause": "An unexpected error occured"}, 500
+
+@app.route('/api/v1/login/user/verify', methods=['POST'])
+def verify_user_token():
+  try:
+    if ("application/json" not in request.content_type):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
+    args = request.get_json()
+    # Safety Checking
+    if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [user_id]"}, 400
+    if "token" not in args or args["token"] is None or args["token"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [token]"}, 400
+    return {"success": True, "data": sessions[args["token"]]["user_id"] == args["user_id"]}
+  except Exception as e:
+    print(e)
+    return {"success": False, "cause": "An unexpected error occured"}, 500
+
+@app.route('/api/v1/login/monitor/verify', methods=['POST'])
+def verify_monitor_token():
+  try:
+    if ("application/json" not in request.content_type):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
+    args = request.get_json()
+    # Safety Checking
+    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [monitor_id]"}, 400
+    if "token" not in args or args["token"] is None or args["token"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [token]"}, 400
+    return {"success": True, "data": sessions_monitors[args["monitor_id"]]["token"] == args["token"]}
+  except Exception as e:
+    print(e)
+    return {"success": False, "cause": "An unexpected error occured"}, 500
+
+@app.route('/api/v1/logout/user', methods=['POST'])
+def logout_user():
+  try:
+    if ("application/json" not in request.content_type):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
+    args = request.get_json()
+    # Safety Checking
+    if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [user_id]"}, 400
+    if "token" not in args or args["token"] is None or args["token"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [token]"}, 400
+    if (sessions[args["token"]]["user_id"] == args["user_id"]):
+      sessions.pop(args["token"], None)
+      return {"success": True}
+    return {"success": True, "cause": "Invalid Credentials"}, 401
+  except Exception as e:
+    print(e)
+    return {"success": False, "cause": "An unexpected error occured"}, 500
+
+@app.route('/api/v1/logout/monitor', methods=['POST'])
+def logout_monitor():
+  try:
+    if ("application/json" not in request.content_type):
+      return {"success": False,
+              "cause": "Invalid Content-Type"}, 400
+    args = request.get_json()
+    # Safety Checking
+    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [monitor_id]"}, 400
+    if "password" not in args or args["token"] is None or args["token"] == "":
+      return {"success": False,
+              "cause": "Missing one or more fields: [token]"}, 400
+    if (sessions_monitors[args["monitor_id"]]["token"] == args["token"]):
+      sessions_monitors.pop(args["monitor_id"], None)
+      return {"success": True}
+    return {"success": True, "cause": "Invalid Credentials"}, 401
   except Exception as e:
     print(e)
     return {"success": False, "cause": "An unexpected error occured"}, 500
@@ -202,7 +293,7 @@ def get_monitor():
 @app.route('/api/v1/monitors/update', methods=['POST'])
 def update_monitor():
   try:
-    if ("application/json" in request.content_type):
+    if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -265,7 +356,7 @@ def update_monitor():
 @app.route('/api/v1/monitors/add', methods=['POST'])
 def add_monitor():
   try:
-    if ("application/json" in request.content_type):
+    if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -327,7 +418,7 @@ def add_monitor():
 @app.route('/api/v1/monitors/reset', methods=['POST'])
 def reset_monitor():
   try:
-    if ("application/json" in request.content_type):
+    if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -372,7 +463,7 @@ def reset_monitor():
 @app.route('/api/v1/monitors/delete', methods=['POST'])
 def delete_monitor():
   try:
-    if ("application/json" in request.content_type):
+    if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
@@ -455,7 +546,7 @@ def get_users():
 @app.route('/api/v1/owners/resetpassword', methods=['POST'])
 def reset_user_password():
   try:
-    if ("application/json" in request.content_type):
+    if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
     args = request.get_json()
