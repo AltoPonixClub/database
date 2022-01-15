@@ -124,6 +124,67 @@
                     <option value="heroku">http://altoponix-database.herokuapp.com/api/v1</option>
                     <option value="localhost">http://127.0.0.1:5000/api/v1</option>
                 </select>
+                <div class="section post">
+                    <div class="section_top">
+                        <div class="section_title">Login as User</div>
+                        <div class="section_button"></div>
+                    </div>
+                    <div class="endpoint">/login/user</div>
+                    <input type="text" id="username" placeholder="username (required)"/><br>
+                    <input type="text" id="password" placeholder="password (required)"/><br>
+                    <input type="text" id="persist" placeholder="persist"/><br>
+                    <button onclick="login()">Login</button>
+                </div>
+                <div class="section post">
+                  <div class="section_top">
+                      <div class="section_title">Login as Monitor</div>
+                      <div class="section_button"></div>
+                  </div>
+                  <div class="endpoint">/login/monitor</div>
+                  <input type="text" id="monitor_id7" placeholder="monitor_id (required)"/><br>
+                  <input type="text" id="password2" placeholder="password (required)"/><br>
+                  <input type="text" id="persist2" placeholder="persist"/><br>
+                  <button onclick="login_monitor()">Login</button>
+                </div>
+                <hr><br>
+                <div class="section_title">Authentication Token</div>
+                <input type="text" id="token" placeholder="token (required)"/><br>
+                <div class="section delete">
+                  <div class="section_top">
+                      <div class="section_title">Logout as User</div>
+                      <div class="section_button"></div>
+                  </div>
+                  <div class="endpoint">/logout/user</div>
+                  <input type="text" id="user_id4" placeholder="user_id (required)"/><br>
+                  <button onclick="logout()">Logout</button>
+                </div>
+                <div class="section delete">
+                  <div class="section_top">
+                      <div class="section_title">Logout as Monitor</div>
+                      <div class="section_button"></div>
+                  </div>
+                  <div class="endpoint">/logout/monitor</div>
+                  <input type="text" id="monitor_id8" placeholder="monitor_id (required)"/><br>
+                  <button onclick="logout_user()">Logout</button>
+                </div>
+                <div class="section post">
+                  <div class="section_top">
+                      <div class="section_title">Verify User Token</div>
+                      <div class="section_button"></div>
+                  </div>
+                  <div class="endpoint">/login/user/verify</div>
+                  <input type="text" id="user_id5" placeholder="user_id (required)"/><br>
+                  <button onclick="verify()">Verify</button>
+                </div>
+                <div class="section post">
+                  <div class="section_top">
+                      <div class="section_title">Verify Monitor Token</div>
+                      <div class="section_button"></div>
+                  </div>
+                  <div class="endpoint">/login/monitor/verify</div>
+                  <input type="text" id="monitor_id9" placeholder="monitor_id (required)"/><br>
+                  <button onclick="verify_monitor()">Verify</button>
+                </div>
                 <div class="section get">
                     <div class="section_top">
                         <div class="section_title">Get Monitor</div>
@@ -162,6 +223,7 @@
                     <div class="endpoint">/monitors/add</div>
                     <input type="text" id="user_id" placeholder="user_id (required)"/><br>
                     <input type="text" id="monitor_id" placeholder="monitor_id (required)"/><br>
+                    <input type="text" id="password3" placeholder="password (required)"/><br>
                     <button onclick="add_monitors()">Add</button>
                 </div>
                 <div class="section delete">
@@ -185,13 +247,24 @@
                 <hr>
                 <div class="section get">
                     <div class="section_top">
-                        <div class="section_title">Get Owners</div>
+                        <div class="section_title">Get Monitors of Owner</div>
                         <div class="section_button"></div>
                     </div>
                     <div class="endpoint">/owners/get</div>
                     <input type="text" id="user_id2" placeholder="user_id"/><br>
                     <button onclick="get_users()">Get</button>
                 </div>
+                <div class="section delete">
+                  <div class="section_top">
+                      <div class="section_title">Reset User Password</div>
+                      <div class="section_button"></div>
+                  </div>
+                  <div class="endpoint">/owners/resetpassowrd</div>
+                  <input type="text" id="user_id3" placeholder="user_id (required)"/><br>
+                  <input type="text" id="old_password" placeholder="old_password"/><br>
+                  <input type="text" id="new_password" placeholder="new_password (required)"/><br>
+                  <button onclick="reset_password_user()">Reset</button>
+              </div>
             </div>
             <div class="response">
                 <div id="status" style="width:99vw;line-break:anywhere;font-family:monospace">waiting on query...</div>
@@ -201,6 +274,51 @@
         </div>
     </body>
     <script type="text/javascript"> 
+
+        function login() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let b = false;
+            if (document.getElementById('persist').value == "true" || document.getElementById('persist').value == "True")
+              b = true;
+            let json = {
+                "username": document.getElementById('username').value,
+                "password": document.getElementById('password').value,
+                "persist": b,
+            };
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/login/user");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
+        function login_monitor() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let b = false;
+            if (document.getElementById('persist2').value == "true" || document.getElementById('persist2').value == "True")
+              b = true;
+            let r = new XMLHttpRequest();
+            let json = {
+                "monitor_id": document.getElementById('monitor_id7').value,
+                "password": document.getElementById('password2').value,
+                "persist": b,
+            };
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/login/monitor");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
         function update_monitors() {
             var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
             document.getElementById('output').innerHTML = ""
@@ -218,6 +336,7 @@
                 "air_flow": parseFloat(document.getElementById('air_flow').value),
                 "foliage_feed": document.getElementById('foliage_feed').value,
                 "root_stream": document.getElementById('root_stream').value,
+                "token": document.getElementById('token').value,
             };
             if (document.getElementById('id').value == "") {
                 json["monitor_id"] = null
@@ -229,7 +348,7 @@
                 json["root_stream"] = null
             }
             r.onload = function(e) {
-                document.getElementById('output').innerHTML = r.responseText
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
                 document.getElementById('status').innerHTML = "status " + r.status
             }
             r.open("POST", url + "/monitors/update");
@@ -245,6 +364,8 @@
             let json = {
                 "monitor_id": document.getElementById('monitor_id').value,
                 "user_id": document.getElementById('user_id').value,
+                "token": document.getElementById('token').value,
+                "password": document.getElementById('password3').value,
             };
             if (document.getElementById('monitor_id').value == "") {
                 json["monitor_id"] = null
@@ -253,7 +374,7 @@
                 json["user_id"] = null
             }
             r.onload = function(e) {
-                document.getElementById('output').innerHTML = r.responseText
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
                 document.getElementById('status').innerHTML = "status " + r.status
             }
             r.open("POST", url + "/monitors/add");
@@ -268,12 +389,13 @@
             let r = new XMLHttpRequest();
             let json = {
                 "monitor_id": document.getElementById('monitor_id2').value,
+                "token": document.getElementById('token').value,
             };
             if (document.getElementById('monitor_id2').value == "") {
                 json["monitor_id"] = null
             }
             r.onload = function(e) {
-                document.getElementById('output').innerHTML = r.responseText
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
                 document.getElementById('status').innerHTML = "status " + r.status
             }
             r.open("POST", url + "/monitors/reset");
@@ -288,12 +410,13 @@
             let r = new XMLHttpRequest();
             let json = {
                 "monitor_id": document.getElementById('monitor_id4').value,
+                "token": document.getElementById('token').value,
             };
             if (document.getElementById('monitor_id4').value == "") {
                 json["monitor_id"] = null
             }
             r.onload = function(e) {
-                document.getElementById('output').innerHTML = r.responseText
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
                 document.getElementById('status').innerHTML = "status " + r.status
             }
             r.open("POST", url + "/monitors/delete");
@@ -308,6 +431,7 @@
             let v = document.getElementById('monitor_id3').value
             let s = document.getElementById('startTime').value
             let e = document.getElementById('endTime').value
+            let t = document.getElementById('token').value
             let r = new XMLHttpRequest();
             r.onload = function(e) {
                 document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
@@ -321,6 +445,8 @@
               u.searchParams.append('startTime', s);
             if (e !== "")
               u.searchParams.append('endTime', e);
+            if (t !== "")
+              u.searchParams.append('token', t);
             r.open("GET", u);
             r.send();
         }
@@ -330,18 +456,131 @@
             document.getElementById('output').innerHTML = ""
             document.getElementById('status').innerHTML = "waiting..."
             let v = document.getElementById('user_id2').value
+            let t = document.getElementById('token').value
             let r = new XMLHttpRequest();
             r.onload = function(e) {
                 document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
                 document.getElementById('status').innerHTML = "status " + r.status
             }
-            if (v == "") {
-                r.open("GET", url + "/owners/get");
-            }else{
-                r.open("GET", url + "/owners/get?user_id=" + v);
-            }
+            let u = new URL(url + "/owners/get");
+            if (v !== "")
+              u.searchParams.append('user_id', v);
+            if (t !== "")
+              u.searchParams.append('token', t);
+            r.open("GET", u)
             r.send();
         }
+
+        function reset_password_user() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "user_id": document.getElementById('user_id3').value,
+                "old_password": document.getElementById('old_password').value,
+                "new_password": document.getElementById('new_password').value,
+                "token": document.getElementById('token').value,
+            };
+            if (document.getElementById('old_password').value == "") {
+                json["old_password"] = null
+            }
+            if (document.getElementById('new_password').value == "") {
+                json["new_password"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/owners/resetpassword");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
+        function logout() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "user_id": document.getElementById('user_id4').value,
+                "token": document.getElementById('token').value,
+            };
+            if (document.getElementById('user_id4').value == "") {
+                json["user_id"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/logout/user");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
+        function logout_monitor() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "monitor_id": document.getElementById('monitor_id8').value,
+                "token": document.getElementById('token').value,
+            };
+            if (document.getElementById('monitor_id8').value == "") {
+                json["monitor_id"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/logout/monitor");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
+        function verify() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "user_id": document.getElementById('user_id5').value,
+                "token": document.getElementById('token').value,
+            };
+            if (document.getElementById('user_id5').value == "") {
+                json["user_id"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/login/user/verify");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
+        function verify_monitor() {
+            var url = document.getElementById("url").options[document.getElementById("url").selectedIndex].text;
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('status').innerHTML = "waiting..."
+            let r = new XMLHttpRequest();
+            let json = {
+                "monitor_id": document.getElementById('monitor_id9').value,
+                "token": document.getElementById('token').value,
+            };
+            if (document.getElementById('monitor_id9').value == "") {
+                json["monitor_id"] = null
+            }
+            r.onload = function(e) {
+                document.getElementById('output').innerHTML = JSON.stringify(JSON.parse(r.responseText), null, 2) 
+                document.getElementById('status').innerHTML = "status " + r.status
+            }
+            r.open("POST", url + "/login/monitor/verify");
+            r.setRequestHeader('Content-Type', 'application/json');
+            r.send(JSON.stringify(json));
+        }
+
         window.onload = function() {
             var anchors = document.getElementsByClassName("section_top")
             for(var i = 0; i < anchors.length; i++) {
