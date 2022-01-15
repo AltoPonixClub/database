@@ -171,6 +171,8 @@ def verify_user_token():
     if "token" not in args or args["token"] is None or args["token"] == "":
       return {"success": False,
               "cause": "Missing one or more fields: [token]"}, 400
+    if args["token"] not in sessions:
+      return {"success": True, "data": False}
     return {"success": True, "data": sessions[args["token"]]["user_id"] == args["user_id"]}
   except Exception as e:
     print(e)
@@ -190,6 +192,8 @@ def verify_monitor_token():
     if "token" not in args or args["token"] is None or args["token"] == "":
       return {"success": False,
               "cause": "Missing one or more fields: [token]"}, 400
+    if args["monitor_id"] not in sessions_monitors:
+      return {"success": True, "data": False}
     return {"success": True, "data": sessions_monitors[args["monitor_id"]]["token"] == args["token"]}
   except Exception as e:
     print(e)
