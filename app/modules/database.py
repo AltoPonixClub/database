@@ -55,7 +55,7 @@ def generateToken(length):
   chars = ""
   for _ in range(length):
     chars = chars + random.choice(ALPHABET)
-  while (chars in sessions or len([v for v in sessions_monitors if v["token"] == chars]) > 0):
+  while (chars in sessions or len([v for v in sessions_monitors.keys() if sessions_monitors[v]["token"] == chars]) > 0):
     chars = ""
     for _ in range(length):
       chars = chars + random.choice(ALPHABET)
@@ -74,7 +74,8 @@ def getUserCredentials(token, request):
 def getMonitorCredentials(token, monitor_id, request):
   if token == "" or token is None or monitor_id not in sessions_monitors:
     return False
-  if round(time.time() * 1000) > sessions_monitors[monitor_id]["expire_date"] or sessions_monitors[monitor_id]["ip"] != request.remote_addr:
+  if round(time.time() * 1000) > sessions_monitors[monitor_id]["expire_date"] and sessions_monitors[monitor_id]["expire_date"] != -1:
+    sessions_monitors.pop(monitor_id, None)
     return False
   return True
 
@@ -139,7 +140,6 @@ def request_login_monitor():
       except:
         return {"success": False, "cause": "Invalid Credentials"}, 401
       # Generate token
-      token = generateToken(32)
       token = generateToken(32)
       expireDate = round(time.time() * 1000) + TOKEN_MAX_AGE
       if "persist" in args and args["persist"]:
