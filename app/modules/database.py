@@ -87,7 +87,12 @@ def request_login_user():
     if ('application/json' not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
     # Safety Checking
     if "username" not in args or args["username"] is None or args["username"] == "":
       return {"success": False,
@@ -124,7 +129,12 @@ def request_login_monitor():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
     # Safety Checking
     if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
       return {"success": False,
@@ -161,7 +171,12 @@ def verify_user_token():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
     # Safety Checking
     if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
       return {"success": False,
@@ -182,7 +197,12 @@ def verify_monitor_token():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
     # Safety Checking
     if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
       return {"success": False,
@@ -203,7 +223,12 @@ def logout_user():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
     # Safety Checking
     if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
       return {"success": False,
@@ -225,7 +250,12 @@ def logout_monitor():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
     # Safety Checking
     if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
       return {"success": False,
@@ -298,7 +328,12 @@ def update_monitor():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
     # Get the current time
     t = round(time.time() * 1000)
     # Safety Checking
@@ -361,7 +396,12 @@ def add_monitor():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
     # Credential Check
     if args.get("token") == "" or args.get("token") is None:
       return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
@@ -423,7 +463,12 @@ def reset_monitor():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
 
     # Credential Check
     if args.get("token") == "" or args.get("token") is None:
@@ -468,7 +513,12 @@ def delete_monitor():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
 
     # Credential Check
     if args.get("token") == "" or args.get("token") is None:
@@ -551,7 +601,12 @@ def reset_user_password():
     if ("application/json" not in request.content_type):
       return {"success": False,
               "cause": "Invalid Content-Type"}, 400
-    args = request.get_json()
+    args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
 
     # Credential Check
     if args.get("token") == "" or args.get("token") is None:
@@ -599,7 +654,12 @@ def reset_user_password():
 # @app.route('/api/v1/owners/add', methods=['POST'])
 # def add_owner():
 #   try: 
-#     args = request.get_json()
+#     args = {}
+    try:
+      args = request.get_json()
+    except Exception as e:
+      print(e)
+      return {"success": False, "cause": "Malformed Input"}, 400
 #     if "user_id" not in args or args["user_id"] is None:
 #       return {"success": False,
 #               "cause": "Missing one or more fields: [user_id]"}, 400
