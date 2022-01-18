@@ -79,27 +79,27 @@ def getMonitorCredentials(token, monitor_id, request):
     return False
   return True
 
+def validateArgs(request, keys):
+  if ('application/json' not in request.content_type):
+    return {}, {"cause": "Invalid Content-Type", "code": 400}
+  args = {}
+  try:
+    args = request.get_json()
+  except:
+    return {}, {"cause": "Malformed Input", "code": 400}
+  for key in keys:
+    if key not in args or args[key] is None or args[key] == "":
+      return {}, {"cause": "Missing one or more fields: [" + key + "]", "code": 400}
+  return args, None
+
 
 # LOGIN METHODS
 @app.route('/api/v1/login/user', methods=['POST'])
 def request_login_user():
   try:
-    if ('application/json' not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
-    # Safety Checking
-    if "username" not in args or args["username"] is None or args["username"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [username]"}, 400
-    if "password" not in args or args["password"] is None or args["password"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [password]"}, 400
+    args, err = validateArgs(request, ["username","password"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
     # Get the hash associated with the username
     for doc in users.find({"username": {'$eq': args["username"]}},{"_id": 0}):
       # Check if the password matches the hash
@@ -126,22 +126,9 @@ def request_login_user():
 @app.route('/api/v1/login/monitor', methods=['POST'])
 def request_login_monitor():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
-    # Safety Checking
-    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [monitor_id]"}, 400
-    if "password" not in args or args["password"] is None or args["password"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [password]"}, 400
+    args, err = validateArgs(request, ["monitor_id","password"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
     # Get the has associated with the monitor_id
     for doc in monitors.find({"monitor_id": {'$eq': args["monitor_id"]}},{"_id": 0}):
       # Check if the password matches the hash
@@ -168,22 +155,10 @@ def request_login_monitor():
 @app.route('/api/v1/login/user/verify', methods=['POST'])
 def verify_user_token():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
-    # Safety Checking
-    if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [user_id]"}, 400
-    if "token" not in args or args["token"] is None or args["token"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [token]"}, 400
+    args, err = validateArgs(request, ["user_id","token"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
+
     if args["token"] not in sessions:
       return {"success": True, "data": False}
     return {"success": True, "data": sessions[args["token"]]["user_id"] == args["user_id"]}
@@ -194,22 +169,10 @@ def verify_user_token():
 @app.route('/api/v1/login/monitor/verify', methods=['POST'])
 def verify_monitor_token():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
-    # Safety Checking
-    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [monitor_id]"}, 400
-    if "token" not in args or args["token"] is None or args["token"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [token]"}, 400
+    args, err = validateArgs(request, ["monitor_id","token"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
+
     if args["monitor_id"] not in sessions_monitors:
       return {"success": True, "data": False}
     return {"success": True, "data": sessions_monitors[args["monitor_id"]]["token"] == args["token"]}
@@ -220,22 +183,10 @@ def verify_monitor_token():
 @app.route('/api/v1/logout/user', methods=['POST'])
 def logout_user():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
-    # Safety Checking
-    if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [user_id]"}, 400
-    if "token" not in args or args["token"] is None or args["token"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [token]"}, 400
+    args, err = validateArgs(request, ["user_id","token"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
+
     if (sessions[args["token"]]["user_id"] == args["user_id"]):
       sessions.pop(args["token"], None)
       return {"success": True}
@@ -247,22 +198,10 @@ def logout_user():
 @app.route('/api/v1/logout/monitor', methods=['POST'])
 def logout_monitor():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
-    # Safety Checking
-    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [monitor_id]"}, 400
-    if "password" not in args or args["token"] is None or args["token"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [token]"}, 400
+    args, err = validateArgs(request, ["monitor_id","token"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
+
     if (sessions_monitors[args["monitor_id"]]["token"] == args["token"]):
       sessions_monitors.pop(args["monitor_id"], None)
       return {"success": True}
@@ -325,37 +264,21 @@ def get_monitor():
 @app.route('/api/v1/monitors/update', methods=['POST'])
 def update_monitor():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
-    # Get the current time
-    t = round(time.time() * 1000)
-    # Safety Checking
-    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
-      return {"success": False,
-            "cause": "Missing one or more fields: [monitor_id]"}, 400
-    if not isValidID(args["monitor_id"]):
-      return {"success": False, "cause": "Invalid monitor_id"}, 400
+    args, err = validateArgs(request, ["monitor_id", "token"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
 
-    # Credential Check
-    if args.get("token") == "" or args.get("token") is None:
-      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
-    creds = getMonitorCredentials(args.get("token"), args.get("monitor_id"), request)
-    if getUserCredentials(args.get("token"), request) != "admin":
+    creds = getMonitorCredentials(args["token"], args["monitor_id"], request)
+    if getUserCredentials(args["token"], request) != "admin":
       if not creds:
         return {"success": False, "cause": "Invalid token"}, 401
-      if sessions_monitors[args.get("monitor_id")]["token"] != args.get("token"):
+      if sessions_monitors[args["monitor_id"]]["token"] != args["token"]:
         return {"success": False, "cause": "Forbidden"}, 403
 
+    # Get the current time
+    t = round(time.time() * 1000)
     for doc in monitors.find({"monitor_id": {'$eq': args["monitor_id"]}}, {"_id": 0, "monitor_id": 0, "owner": 0}):
       upd = {}
-      keys = doc.keys()
       # For every value to update
       for arg in args.items():
         arg = list(arg)
@@ -393,34 +316,17 @@ def update_monitor():
 @app.route('/api/v1/monitors/add', methods=['POST'])
 def add_monitor():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
-    # Credential Check
-    if args.get("token") == "" or args.get("token") is None:
-      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
-    creds = getUserCredentials(args.get("token"), request)
+    args, err = validateArgs(request, ["token","password","user_id","monitor_id"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
+
+    creds = getUserCredentials(args["token"], request)
     if creds == "user":
       return {"success": False, "cause": "Forbidden"}, 403
     if creds == "":
       return {"success": False, "cause": "Invalid token"}, 401
 
     # Safety Checking
-    if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [user_id]"}, 400
-    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [monitor_id]"}, 400
-    if "password" not in args or args["password"] is None or args["password"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [password]"}, 400
     if not isValidID(args["user_id"]):
       return {"success": False,
               "cause": "Invalid user_id"}, 400
@@ -460,29 +366,17 @@ def add_monitor():
 @app.route('/api/v1/monitors/reset', methods=['POST'])
 def reset_monitor():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
+    args, err = validateArgs(request, ["token","monitor_id"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
 
-    # Credential Check
-    if args.get("token") == "" or args.get("token") is None:
-      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
-    creds = getUserCredentials(args.get("token"), request)
+    creds = getUserCredentials(args["token"], request)
     if creds == "user":
       return {"success": False, "cause": "Forbidden"}, 403
     if creds == "":
       return {"success": False, "cause": "Invalid token"}, 401
 
     # Safety Checking
-    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [monitor_id]"}, 400
     if not isValidID(args["monitor_id"]):
       return {"success": False,
               "cause": "Invalid monitor_id"}, 400
@@ -510,32 +404,21 @@ def reset_monitor():
 @app.route('/api/v1/monitors/delete', methods=['POST'])
 def delete_monitor():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
+    args, err = validateArgs(request, ["token","monitor_id"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
 
-    # Credential Check
-    if args.get("token") == "" or args.get("token") is None:
-      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
-    creds = getUserCredentials(args.get("token"), request)
+    creds = getUserCredentials(args["token"], request)
     if creds == "user":
       return {"success": False, "cause": "Forbidden"}, 403
     if creds == "":
       return {"success": False, "cause": "Invalid token"}, 401
 
     # Safety Checking
-    if "monitor_id" not in args or args["monitor_id"] is None or args["monitor_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [monitor_id]"}, 400
     if not isValidID(args["monitor_id"]):
       return {"success": False,
               "cause": "Invalid monitor_id"}, 400
+
     for doc in monitors.find({"monitor_id": {'$eq': args["monitor_id"]}}, {"_id": 0, "monitor_id": 0}):
       # Get the owner given the monitor (hidden tag)
       owner_id = doc["owner"]
@@ -598,38 +481,23 @@ def get_users():
 @app.route('/api/v1/owners/resetpassword', methods=['POST'])
 def reset_user_password():
   try:
-    if ("application/json" not in request.content_type):
-      return {"success": False,
-              "cause": "Invalid Content-Type"}, 400
-    args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
+    args, err = validateArgs(request, ["token","new_password","user_id"])
+    if err:
+      return {"success": False, "cause": err["cause"]}, err["code"]
 
-    # Credential Check
-    if args.get("token") == "" or args.get("token") is None:
-      return {"success": False, "cause": "Missing one or more fields: [token]"}, 400
-    creds = getUserCredentials(args.get("token"), request)
+    creds = getUserCredentials(args["token"], request)
     if creds == "":
       return {"success": False, "cause": "Invalid token"}, 401
 
     # Safety Checking
-    if "user_id" not in args or args["user_id"] is None or args["user_id"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [user_id]"}, 400
     if creds != "admin" and ("old_password" not in args or args["old_password"] is None or args["old_password"] == ""):
       return {"success": False,
               "cause": "Missing one or more fields: [old_password]"}, 400
-    if "new_password" not in args or args["new_password"] is None or args["new_password"] == "":
-      return {"success": False,
-              "cause": "Missing one or more fields: [new_password]"}, 400
     if not isValidID(args["user_id"]):
       return {"success": False,
               "cause": "Invalid user_id"}, 400
 
-    if creds == "user" and args.get("user_id") != sessions[args.get("token")]["user_id"]:
+    if creds == "user" and args["user_id"] != sessions[args["token"]]["user_id"]:
       return {"success": False, "cause": "Forbidden"}, 403
 
     for doc in users.find({"user_id": {'$eq': args["user_id"]}}, {"_id": 0, "user_id": 0}):
@@ -655,11 +523,11 @@ def reset_user_password():
 # def add_owner():
 #   try: 
 #     args = {}
-    try:
-      args = request.get_json()
-    except Exception as e:
-      print(e)
-      return {"success": False, "cause": "Malformed Input"}, 400
+#     try:
+#     args = request.get_json()
+#     except Exception as e:
+#     print(e)
+#     return {"success": False, "cause": "Malformed Input"}, 400
 #     if "user_id" not in args or args["user_id"] is None:
 #       return {"success": False,
 #               "cause": "Missing one or more fields: [user_id]"}, 400
